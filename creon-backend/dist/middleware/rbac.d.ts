@@ -1,0 +1,55 @@
+import { Response, NextFunction } from 'express';
+import { AuthRequest } from './auth';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'viewer' | 'user';
+export declare const hasRole: (userRole: UserRole, requiredRole: UserRole) => boolean;
+export declare const requireRole: (requiredRole: UserRole) => (req: AuthRequest, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export declare const canAccessOwnResource: (req: AuthRequest, resourceUserId: string) => boolean;
+export declare const requireOwnershipOrAdmin: (getUserIdFromResource: (req: AuthRequest) => string | null) => (req: AuthRequest, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export declare const PERMISSIONS: {
+    readonly CREATE_USER: "admin";
+    readonly DELETE_USER: "super_admin";
+    readonly MANAGE_USERS: "admin";
+    readonly VIEW_ALL_USERS: "manager";
+    readonly CREATE_CONTENT: "user";
+    readonly EDIT_CONTENT: "user";
+    readonly DELETE_CONTENT: "user";
+    readonly VIEW_CONTENT: "viewer";
+    readonly VIEW_ANALYTICS: "user";
+    readonly VIEW_ALL_ANALYTICS: "manager";
+    readonly SYSTEM_SETTINGS: "super_admin";
+    readonly MANAGE_ROLES: "super_admin";
+    readonly MANAGE_SHOP: "user";
+    readonly VIEW_SHOP: "viewer";
+    readonly MANAGE_THEME: "user";
+    readonly VIEW_THEME: "viewer";
+};
+export declare const hasPermission: (userRole: UserRole, permission: keyof typeof PERMISSIONS) => boolean;
+export declare const requirePermission: (permission: keyof typeof PERMISSIONS) => (req: AuthRequest, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+declare const _default: {
+    requireRole: (requiredRole: UserRole) => (req: AuthRequest, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+    requireOwnershipOrAdmin: (getUserIdFromResource: (req: AuthRequest) => string | null) => (req: AuthRequest, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+    requirePermission: (permission: keyof typeof PERMISSIONS) => (req: AuthRequest, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+    hasRole: (userRole: UserRole, requiredRole: UserRole) => boolean;
+    hasPermission: (userRole: UserRole, permission: keyof typeof PERMISSIONS) => boolean;
+    canAccessOwnResource: (req: AuthRequest, resourceUserId: string) => boolean;
+    PERMISSIONS: {
+        readonly CREATE_USER: "admin";
+        readonly DELETE_USER: "super_admin";
+        readonly MANAGE_USERS: "admin";
+        readonly VIEW_ALL_USERS: "manager";
+        readonly CREATE_CONTENT: "user";
+        readonly EDIT_CONTENT: "user";
+        readonly DELETE_CONTENT: "user";
+        readonly VIEW_CONTENT: "viewer";
+        readonly VIEW_ANALYTICS: "user";
+        readonly VIEW_ALL_ANALYTICS: "manager";
+        readonly SYSTEM_SETTINGS: "super_admin";
+        readonly MANAGE_ROLES: "super_admin";
+        readonly MANAGE_SHOP: "user";
+        readonly VIEW_SHOP: "viewer";
+        readonly MANAGE_THEME: "user";
+        readonly VIEW_THEME: "viewer";
+    };
+};
+export default _default;
+//# sourceMappingURL=rbac.d.ts.map

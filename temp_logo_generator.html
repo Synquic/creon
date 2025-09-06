@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logo to PNG Converter</title>
+</head>
+<body>
+    <canvas id="canvas" width="200" height="200" style="border: 1px solid black;"></canvas>
+    <br>
+    <button onclick="downloadPNG()">Download PNG</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create gradient
+        const gradient = ctx.createLinearGradient(0, 0, 200, 200);
+        gradient.addColorStop(0, '#4F46E5');
+        gradient.addColorStop(1, '#7C3AED');
+        
+        // Draw background rounded rectangle
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.roundRect(25, 25, 150, 150, 30);
+        ctx.fill();
+        
+        // Draw the S letter
+        ctx.strokeStyle = 'white';
+        ctx.fillStyle = 'white';
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        ctx.beginPath();
+        // S path
+        ctx.moveTo(75, 60);
+        ctx.bezierCurveTo(85, 50, 105, 50, 115, 60);
+        ctx.bezierCurveTo(115, 70, 105, 75, 95, 75);
+        ctx.lineTo(85, 75);
+        ctx.bezierCurveTo(75, 75, 65, 80, 65, 90);
+        ctx.bezierCurveTo(65, 100, 75, 105, 85, 105);
+        ctx.lineTo(125, 105);
+        ctx.bezierCurveTo(135, 105, 145, 115, 145, 125);
+        ctx.bezierCurveTo(145, 135, 135, 145, 125, 145);
+        ctx.lineTo(85, 145);
+        ctx.bezierCurveTo(75, 145, 65, 135, 65, 125);
+        ctx.stroke();
+        
+        function downloadPNG() {
+            const link = document.createElement('a');
+            link.download = 'logo.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
