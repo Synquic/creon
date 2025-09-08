@@ -307,6 +307,11 @@ class ApiService {
       },
     });
   }
+
+  async fetchParsedData(url: string) {
+    return this.axiosInstance.post('/data-parsing/fetch-response', { url }, { timeout: 0 });
+  }
+
 }
 
 // Create and export the singleton instance

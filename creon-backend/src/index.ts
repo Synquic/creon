@@ -20,6 +20,7 @@ import themeRoutes from './routes/theme';
 import roleRoutes from './routes/roles';
 import analyticsRoutes from './routes/analytics';
 import shopSettingsRoutes from './routes/shopSettings';
+import dataParsingRoutes from './routes/dataParsing';
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ app.use('/api/theme', themeRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/shop', shopSettingsRoutes);
+app.use('/api/data-parsing', dataParsingRoutes);
 app.use('/', redirectRoutes);
 
 app.get('/api/health', (req, res) => {
