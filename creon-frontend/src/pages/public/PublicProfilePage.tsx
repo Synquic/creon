@@ -67,6 +67,7 @@ interface ProductCollection {
 const PublicProfilePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const [activeTab, setActiveTab] = useState<'links' | 'shop'>('links');
+  const [expandedCollections, setExpandedCollections] = useState<string[]>([]);
 
   const { data: profileData, isLoading, error } = useQuery({
     queryKey: ['public-profile', username],
@@ -565,326 +566,273 @@ const PublicProfilePage: React.FC = () => {
 
         {/* Product Collections */}
         {activeTab === 'shop' && collections && collections.length > 0 && (
-          <div className="space-y-6">
-            {collections.map((collection: ProductCollection, collectionIndex: number) => (
-              <motion.div
-                key={collection._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: collectionIndex * 0.1 }}
-                className="mb-8"
-              >
-                {collection.image && (
-                  <motion.div 
-                    className="relative mb-4 overflow-hidden"
-                    initial={{ opacity: 0.6 }}
-                    animate={{ opacity: 1 }}
-                    style={{
-                      borderRadius: getLinkButtonRadius(),
-                      boxShadow: theme.buttonShadow ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none',
-                    }}
-                  >
-                    <img
-                      src={collection.image}
-                      alt={collection.title}
-                      className="w-full h-40 object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
-                      <div>
-                        <h2 
-                          className="text-xl font-bold text-white mb-1"
-                          style={{ 
-                            fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
-                            fontSize: theme.fontSize === 'small' ? '18px' : theme.fontSize === 'large' ? '24px' : '20px',
-                            fontWeight: theme.fontWeight === 'light' ? 300 : 
-                                      theme.fontWeight === 'medium' ? 500 : 
-                                      theme.fontWeight === 'semibold' ? 600 : 
-                                      theme.fontWeight === 'bold' ? 700 : 400
-                          }}
-                        >
-                          {collection.title}
-                        </h2>
-                        {collection.description && (
-                          <p className="text-white/80 text-sm"
-                            style={{ 
-                              fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
-                              fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
-                            }}
-                          >
-                            {collection.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                
-                {!collection.image && (
-                  <div className="mb-4 pb-2 border-b" style={{ 
-                    borderColor: theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb', 
-                  }}>
-                    <h2 
-                      className="text-xl font-bold flex items-center" 
-                      style={{ 
-                        color: theme.textColor || '#1f2937',
-                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
-                        fontSize: theme.fontSize === 'small' ? '18px' : theme.fontSize === 'large' ? '24px' : '20px',
-                        fontWeight: theme.fontWeight === 'light' ? 300 : 
-                                  theme.fontWeight === 'medium' ? 500 : 
-                                  theme.fontWeight === 'semibold' ? 600 : 
-                                  theme.fontWeight === 'bold' ? 700 : 400
-                      }}
-                    >
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center mr-3" 
-                        style={{
-                          backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
-                        }}
-                      >
-                        <ShoppingBagIcon className="w-5 h-5" style={{ color: theme.primaryColor || '#16a34a' }} />
-                      </div>
-                      {collection.title}
-                    </h2>
-                    {collection.description && (
-                      <p className="mt-1 ml-11 text-sm" style={{ 
-                        color: theme.textColor || '#6b7280', 
-                        opacity: 0.8,
-                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
-                        fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
-                      }}>
-                        {collection.description}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Check if the collection has any products */}
-                  {products?.filter((p: Product) => collection.products?.includes(p._id)).length === 0 ? (
-                    <div 
-                      className="col-span-2 text-center py-6 rounded-lg"
-                      style={{
-                        backgroundColor: `${theme.backgroundColor || '#ffffff'}`,
-                        border: `1px dashed ${theme.primaryColor ? `${theme.primaryColor}40` : '#e5e7eb'}`,
-                        borderRadius: getLinkButtonRadius(),
-                      }}
-                    >
-                      <ShoppingBagIcon 
-                        className="w-8 h-8 mx-auto mb-2 opacity-60" 
-                        style={{ color: theme.primaryColor || '#16a34a' }} 
-                      />
-                      <p style={{ 
-                        color: theme.textColor || '#6b7280', 
-                        opacity: 0.7,
-                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
-                      }}>
-                        No products in this collection yet
-                      </p>
-                    </div>
-                  ) : (
-                    /* Find products that belong to this collection */
-                    products?.filter((p: Product) => 
-                      // Check if this product's ID is included in the collection's products array
-                      collection.products?.includes(p._id)
-                    ).map((product: Product) => (
-                      <motion.div
-                        key={product._id}
-                        whileHover={{ 
-                          scale: theme.buttonAnimation === 'hover-scale' ? 1.03 : 1,
-                          y: theme.buttonAnimation === 'hover-lift' ? -5 : 0,
-                          boxShadow: theme.buttonAnimation === 'hover-glow' ? '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' : ''
-                        }}
-                        className="cursor-pointer overflow-hidden transition-all duration-300"
-                        onClick={() => handleProductClick(product)}
-                        style={{
-                          backgroundColor: theme.backgroundColor || '#ffffff',
-                          borderRadius: getLinkButtonRadius(),
-                          boxShadow: theme.buttonShadow ? '0 2px 5px rgba(0, 0, 0, 0.08)' : 'none',
-                          border: `${theme.buttonBorderWidth || 1}px solid ${theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb'}`,
-                        }}
-                      >
-                        <div className="relative">
-                          <img
-                            src={product.image}
-                            alt={product.title}
-                            className="w-full h-32 object-cover"
-                            style={{
-                              borderTopLeftRadius: getLinkButtonRadius(),
-                              borderTopRightRadius: getLinkButtonRadius(),
-                            }}
-                          />
-                          <div 
-                            className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent"
-                            style={{
-                              borderBottomLeftRadius: getLinkButtonRadius(),
-                              borderBottomRightRadius: getLinkButtonRadius(),
-                            }}
-                          ></div>
-                        </div>
-                        <div className="p-3">
-                          <h4 className="font-semibold text-sm mb-1 line-clamp-2" style={{ 
-                            color: theme.textColor || '#1f2937',
-                            fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
-                            fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
-                            fontWeight: theme.fontWeight || 'normal',
-                          }}>
-                            {product.title}
-                          </h4>
-                          {product.price && (
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="font-bold" style={{ 
-                                color: theme.primaryColor || '#16a34a',
-                                fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
-                              }}>
-                                {product.currency === 'INR' 
-                                  ? `₹${product.price.toFixed(2)}`
-                                  : product.currency === 'USD'
-                                    ? `$${product.price.toFixed(2)}`
-                                    : `${product.currency} ${product.price.toFixed(2)}`}
-                              </p>
-                              <button 
-                                className="text-xs py-1 px-2 rounded-full"
-                                style={{
-                                  backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
-                                  color: theme.primaryColor || '#16a34a',
-                                  fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`
-                                }}
-                              >
-                                Shop Now
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {/* Individual Products - those not in any collection */}
-        {activeTab === 'shop' && products && (
-          <>
-            {(() => {
-              // Get all product IDs that are part of collections
-              const collectionProductIds = collections?.flatMap((c: ProductCollection) => c.products || []) || [];
-              // Filter out products that don't belong to any collection
-              const individualProducts = products.filter((p: Product) => !collectionProductIds.includes(p._id));
+          <div className={`mb-8 ${linkSpacingClass}`}>
+            {collections.map((collection: ProductCollection, index: number) => {
+              // Create a unique ID for this collection for expansion tracking
+              const collectionId = collection._id;
+              const isExpanded = expandedCollections.includes(collectionId);
+              const collectionProducts = products?.filter((p: Product) => collection.products?.includes(p._id)) || [];
+              const productCount = collectionProducts.length;
               
-              if (individualProducts.length === 0) return null;
+              // Function to toggle expansion state
+              const toggleExpand = () => {
+                setExpandedCollections(prev => 
+                  isExpanded 
+                    ? prev.filter(id => id !== collectionId)
+                    : [...prev, collectionId]
+                );
+              };
               
               return (
                 <motion.div
+                  key={collection._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.5 }}
-                  className="mt-8"
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="mb-4"
                 >
-                  <div className="mb-4 pb-2 border-b" style={{ 
-                    borderColor: theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb', 
-                  }}>
-                    <h2 
-                      className="text-xl font-bold flex items-center" 
-                      style={{ 
-                        color: theme.textColor || '#1f2937',
-                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
-                        fontSize: theme.fontSize === 'small' ? '18px' : theme.fontSize === 'large' ? '24px' : '20px',
-                        fontWeight: theme.fontWeight === 'light' ? 300 : 
-                                  theme.fontWeight === 'medium' ? 500 : 
-                                  theme.fontWeight === 'semibold' ? 600 : 
-                                  theme.fontWeight === 'bold' ? 700 : 400
-                      }}
-                    >
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center mr-3" 
-                        style={{
-                          backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
-                        }}
-                      >
-                        <ShoppingBagIcon className="w-5 h-5" style={{ color: theme.primaryColor || '#16a34a' }} />
-                      </div>
-                      Featured Products
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    {individualProducts.map((product: Product) => (
-                      <motion.div
-                        key={product._id}
-                        whileHover={{ 
-                          scale: theme.buttonAnimation === 'hover-scale' ? 1.03 : 1,
-                          y: theme.buttonAnimation === 'hover-lift' ? -5 : 0,
-                          boxShadow: theme.buttonAnimation === 'hover-glow' ? '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' : ''
-                        }}
-                        className="cursor-pointer overflow-hidden transition-all duration-300"
-                        onClick={() => handleProductClick(product)}
-                        style={{
-                          backgroundColor: theme.backgroundColor || '#ffffff',
-                          borderRadius: getLinkButtonRadius(),
-                          boxShadow: theme.buttonShadow ? '0 2px 5px rgba(0, 0, 0, 0.08)' : 'none',
-                          border: `${theme.buttonBorderWidth || 1}px solid ${theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb'}`,
-                        }}
-                      >
-                        <div className="relative">
-                          <img
-                            src={product.image}
-                            alt={product.title}
-                            className="w-full h-32 object-cover"
-                            style={{
-                              borderTopLeftRadius: getLinkButtonRadius(),
-                              borderTopRightRadius: getLinkButtonRadius(),
-                            }}
-                          />
-                          <div 
-                            className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent"
-                            style={{
-                              borderBottomLeftRadius: getLinkButtonRadius(),
-                              borderBottomRightRadius: getLinkButtonRadius(),
-                            }}
-                          ></div>
-                        </div>
-                        <div className="p-3">
-                          <h4 className="font-semibold text-sm mb-1 line-clamp-2" style={{ 
-                            color: theme.textColor || '#1f2937',
-                            fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
-                            fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
-                            fontWeight: theme.fontWeight || 'normal',
-                          }}>
-                            {product.title}
-                          </h4>
-                          {product.price && (
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="font-bold" style={{ 
-                                color: theme.primaryColor || '#16a34a',
-                                fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
-                              }}>
-                                {product.currency === 'INR' 
-                                  ? `₹${product.price.toFixed(2)}`
-                                  : product.currency === 'USD'
-                                    ? `$${product.price.toFixed(2)}`
-                                    : `${product.currency} ${product.price.toFixed(2)}`}
-                              </p>
-                              <button 
-                                className="text-xs py-1 px-2 rounded-full"
-                                style={{
-                                  backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
-                                  color: theme.primaryColor || '#16a34a',
-                                  fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`
+                  {/* Collection Card - styled similarly to links for consistency */}
+                  <div
+                    onClick={toggleExpand}
+                    className={`cursor-pointer transition-all duration-200 overflow-hidden ${
+                      theme.buttonAnimation === 'hover-lift' ? 'hover:-translate-y-1' :
+                      theme.buttonAnimation === 'hover-scale' ? 'hover:scale-[1.02]' :
+                      theme.buttonAnimation === 'hover-glow' ? 'hover:shadow-lg' : 'hover:shadow-md'
+                    }`}
+                    style={{
+                      backgroundColor: theme.backgroundColor || '#ffffff',
+                      borderColor: theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb',
+                      borderWidth: `${theme.buttonBorderWidth || 1}px`,
+                      borderStyle: 'solid',
+                      borderRadius: getLinkButtonRadius(),
+                      boxShadow: theme.buttonShadow ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none',
+                    }}
+                  >
+                    {/* Collection Image Area */}
+                    {collection.image ? (
+                      <div className="relative">
+                        <img
+                          src={collection.image}
+                          alt={collection.title}
+                          className="w-full h-48 object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                          <div className="flex justify-between items-end w-full">
+                            <div>
+                              <h2 
+                                className="text-xl font-bold text-white mb-1"
+                                style={{ 
+                                  fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                                  fontSize: theme.fontSize === 'small' ? '18px' : theme.fontSize === 'large' ? '24px' : '20px',
+                                  fontWeight: theme.fontWeight === 'light' ? 300 : 
+                                            theme.fontWeight === 'medium' ? 500 : 
+                                            theme.fontWeight === 'semibold' ? 600 : 
+                                            theme.fontWeight === 'bold' ? 700 : 400
                                 }}
                               >
-                                Shop Now
-                              </button>
+                                {collection.title}
+                              </h2>
+                              {collection.description && (
+                                <p className="text-white/80 text-sm line-clamp-2"
+                                  style={{ 
+                                    fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                                    fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                                  }}
+                                >
+                                  {collection.description}
+                                </p>
+                              )}
                             </div>
-                          )}
+                            {productCount > 0 && (
+                              <div className="flex items-center bg-white/20 rounded-full p-1 backdrop-blur-sm">
+                                <span className="text-white text-xs font-medium mr-1">
+                                  {productCount} {productCount === 1 ? 'item' : 'items'}
+                                </span>
+                                <svg 
+                                  className={`w-4 h-4 text-white transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </motion.div>
-                    ))}
+                      </div>
+                    ) : (
+                      <div 
+                        className="p-4"
+                        style={{
+                          backgroundColor: theme.backgroundColor || '#ffffff',
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center mr-3" 
+                              style={{
+                                backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
+                              }}
+                            >
+                              <ShoppingBagIcon className="w-5 h-5" style={{ color: theme.primaryColor || '#16a34a' }} />
+                            </div>
+                            <div>
+                              <h3 
+                                className="font-semibold" 
+                                style={{ 
+                                  color: theme.textColor || '#1f2937',
+                                  fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                                  fontSize: theme.fontSize === 'small' ? '14px' : theme.fontSize === 'large' ? '18px' : '16px',
+                                }}
+                              >
+                                {collection.title}
+                              </h3>
+                              {collection.description && (
+                                <p className="text-sm line-clamp-1" style={{ color: theme.textColor || '#6b7280', opacity: 0.7 }}>
+                                  {collection.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            {productCount > 0 && (
+                              <div className="flex items-center mr-2">
+                                <span className="text-sm font-medium mr-1" style={{ color: theme.textColor || '#6b7280', opacity: 0.8 }}>
+                                  {productCount} {productCount === 1 ? 'item' : 'items'}
+                                </span>
+                              </div>
+                            )}
+                            <div style={{ color: theme.textColor || '#9ca3af', opacity: 0.5 }}>
+                              <svg 
+                                className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Expandable Products Container */}
+                  <motion.div
+                    initial="collapsed"
+                    animate={isExpanded ? "expanded" : "collapsed"}
+                    variants={{
+                      expanded: { opacity: 1, height: "auto", marginTop: 16 },
+                      collapsed: { opacity: 0, height: 0, marginTop: 0 }
+                    }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                      <div className="grid grid-cols-2 gap-4">
+                        {collectionProducts.length === 0 ? (
+                          <div 
+                            className="col-span-2 text-center py-6 rounded-lg"
+                            style={{
+                              backgroundColor: `${theme.backgroundColor || '#ffffff'}`,
+                              border: `1px dashed ${theme.primaryColor ? `${theme.primaryColor}40` : '#e5e7eb'}`,
+                              borderRadius: getLinkButtonRadius(),
+                            }}
+                          >
+                            <ShoppingBagIcon 
+                              className="w-8 h-8 mx-auto mb-2 opacity-60" 
+                              style={{ color: theme.primaryColor || '#16a34a' }} 
+                            />
+                            <p style={{ 
+                              color: theme.textColor || '#6b7280', 
+                              opacity: 0.7,
+                              fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                            }}>
+                              No products in this collection yet
+                            </p>
+                          </div>
+                        ) : (
+                          /* Display products that belong to this collection */
+                          collectionProducts.map((product: Product) => (
+                            <motion.div
+                              key={product._id}
+                              whileHover={{ 
+                                scale: theme.buttonAnimation === 'hover-scale' ? 1.03 : 1,
+                                y: theme.buttonAnimation === 'hover-lift' ? -5 : 0,
+                                boxShadow: theme.buttonAnimation === 'hover-glow' ? '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' : ''
+                              }}
+                              className="cursor-pointer overflow-hidden transition-all duration-300"
+                              onClick={() => handleProductClick(product)}
+                              style={{
+                                backgroundColor: theme.backgroundColor || '#ffffff',
+                                borderRadius: getLinkButtonRadius(),
+                                boxShadow: theme.buttonShadow ? '0 2px 5px rgba(0, 0, 0, 0.08)' : 'none',
+                                border: `${theme.buttonBorderWidth || 1}px solid ${theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb'}`,
+                              }}
+                            >
+                              <div className="relative">
+                                <img
+                                  src={product.image}
+                                  alt={product.title}
+                                  className="w-full h-32 object-cover"
+                                  style={{
+                                    borderTopLeftRadius: getLinkButtonRadius(),
+                                    borderTopRightRadius: getLinkButtonRadius(),
+                                  }}
+                                />
+                                <div 
+                                  className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent"
+                                  style={{
+                                    borderBottomLeftRadius: getLinkButtonRadius(),
+                                    borderBottomRightRadius: getLinkButtonRadius(),
+                                  }}
+                                ></div>
+                              </div>
+                              <div className="p-3">
+                                <h4 className="font-semibold text-sm mb-1 line-clamp-2" style={{ 
+                                  color: theme.textColor || '#1f2937',
+                                  fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                                  fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                                  fontWeight: theme.fontWeight || 'normal',
+                                }}>
+                                  {product.title}
+                                </h4>
+                                {product.price && (
+                                  <div className="flex items-center justify-between mt-1">
+                                    <p className="font-bold" style={{ 
+                                      color: theme.primaryColor || '#16a34a',
+                                      fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                                    }}>
+                                      {product.currency === 'INR' 
+                                        ? `₹${product.price.toFixed(2)}`
+                                        : product.currency === 'USD'
+                                          ? `$${product.price.toFixed(2)}`
+                                          : `${product.currency} ${product.price.toFixed(2)}`}
+                                    </p>
+                                    <button 
+                                      className="text-xs py-1 px-2 rounded-full"
+                                      style={{
+                                        backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
+                                        color: theme.primaryColor || '#16a34a',
+                                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`
+                                      }}
+                                    >
+                                      Shop Now
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
                 </motion.div>
               );
-            })()}
-          </>
+            })}
+          </div>
         )}
 
         {/* Tab-specific Empty State */}
