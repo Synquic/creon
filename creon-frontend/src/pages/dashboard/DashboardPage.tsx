@@ -9,7 +9,6 @@ import {
   ShoppingBagIcon,
 } from '@heroicons/react/24/outline';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import Card from '../../components/ui/Card';
 import { apiService } from '../../services/api';
 
 interface DashboardStats {
@@ -197,7 +196,7 @@ const DashboardPage: React.FC = () => {
               </div>
               
               <div className="space-y-4">
-                {recentStats.map((stat, index) => (
+                {recentStats.map((stat) => (
                   <div key={stat.title} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-green-50/30 rounded-2xl border border-gray-100">
                     <div className="flex items-center space-x-4">
                       <div className="p-3 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl shadow-md">
@@ -275,7 +274,7 @@ const DashboardPage: React.FC = () => {
                   { icon: LinkIcon, text: "Add New Link", color: "green", bg: "bg-green-100", textColor: "text-green-700" },
                   { icon: ShoppingBagIcon, text: "Add Product", color: "emerald", bg: "bg-emerald-100", textColor: "text-emerald-700" },
                   { icon: ChartBarIcon, text: "View Analytics", color: "green", bg: "bg-emerald-100", textColor: "text-emerald-700" }
-                ].map((action, index) => (
+                ].map((action) => (
                   <motion.button
                     key={action.text}
                     whileHover={{ x: 5, scale: 1.02 }}

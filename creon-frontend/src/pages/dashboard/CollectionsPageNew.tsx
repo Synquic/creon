@@ -99,8 +99,8 @@ const CollectionsPageNew: React.FC = () => {
   });
 
   const updateCollectionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      simpleApi.updateCollection(id, data),
+    mutationFn: ({ id, title, data }: { id: string; title: string; data: Record<string, unknown> }) =>
+      simpleApi.updateCollection(id, title, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
       toast.success('Collection updated successfully!');
@@ -183,7 +183,11 @@ const CollectionsPageNew: React.FC = () => {
 
     try {
       if (editingCollection) {
-        await updateCollectionMutation.mutateAsync({ id: editingCollection._id, data: cleanData });
+        await updateCollectionMutation.mutateAsync({ 
+          id: editingCollection._id, 
+          title: cleanData.title, 
+          data: cleanData 
+        });
       } else {
         await createCollectionMutation.mutateAsync(cleanData);
       }

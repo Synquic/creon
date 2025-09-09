@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   PlusIcon,
   LinkIcon,
-  EyeIcon,
   PencilIcon,
   TrashIcon,
   ChartBarIcon,
@@ -106,8 +105,9 @@ const LinksPageNew: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['links'] });
     },
-    onError: (error: any) => {
+    onError: (error: string) => {
       toast.error('Failed to toggle link status');
+      console.log(error);
     },
   });
 
@@ -117,8 +117,9 @@ const LinksPageNew: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['links'] });
       toast.success('Link deleted successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: string) => {
       toast.error('Failed to delete link');
+            console.log(error);
     },
   });
 
@@ -582,7 +583,9 @@ const LinksPageNew: React.FC = () => {
                   url: link.url,
                   shortCode: link.shortCode,
                   isActive: link.isActive,
-                  clickCount: link.clickCount
+                  clickCount: link.clickCount,
+                  // Add other required properties that might be missing
+                  type: link.type || 'link'
                 }))}
               />
             </div>

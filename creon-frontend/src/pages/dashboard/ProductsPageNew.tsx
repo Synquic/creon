@@ -136,8 +136,9 @@ const ProductsPageNew: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Product deleted successfully!");
     },
-    onError: (error: any) => {
+    onError: (error: string) => {
       toast.error("Failed to delete product");
+            console.log(error);
     },
   });
 
@@ -147,8 +148,9 @@ const ProductsPageNew: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
-    onError: (error: any) => {
+    onError: (error: string) => {
       toast.error("Failed to toggle product status");
+            console.log(error);
     },
   });
 

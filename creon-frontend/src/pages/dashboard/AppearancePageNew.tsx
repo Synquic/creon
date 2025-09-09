@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -6,9 +6,9 @@ import {
   EyeIcon,
   SwatchIcon,
   DevicePhoneMobileIcon,
-  ArrowPathIcon,
+  // ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../../contexts/AuthContext';
+// import { useAuth } from '../../contexts/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import Button from '../../components/ui/Button';
 import PublicProfilePreview from '../../components/PublicProfilePreview';
@@ -25,7 +25,7 @@ interface ColorPalette {
 }
 
 const AppearancePageNew: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('colors');
 
@@ -41,7 +41,7 @@ const AppearancePageNew: React.FC = () => {
       toast.success('Theme updated successfully!');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update theme');
+      toast.error(error?.response?.data?.message || 'Failed to update theme');
     },
   });
 
@@ -51,8 +51,9 @@ const AppearancePageNew: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['theme'] });
       toast.success('Theme reset to default!');
     },
-    onError: (error: any) => {
+    onError: (error: string) => {
       toast.error('Failed to reset theme');
+      console.log(error);
     },
   });
 

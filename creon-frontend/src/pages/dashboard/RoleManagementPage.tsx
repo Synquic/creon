@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  UserGroupIcon,
   ShieldCheckIcon,
   TrashIcon,
   PencilIcon,
-  ChevronDownIcon,
   UserIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
@@ -325,7 +323,7 @@ const RoleManagementPage: React.FC = () => {
                   </Button>
                   <Button
                     onClick={() => handleRoleChange(editingUser._id, editingUser.role)}
-                    disabled={updateRoleMutation.isLoading}
+                    disabled={updateRoleMutation.isPending}
                   >
                     Update Role
                   </Button>

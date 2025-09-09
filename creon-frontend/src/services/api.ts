@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
 import toast from 'react-hot-toast';
@@ -80,9 +81,9 @@ class ApiService {
           }
         }
 
-        if (error.response?.status >= 500) {
+        if (error.response && typeof error.response.status === 'number' && error.response.status >= 500) {
           toast.error('Server error. Please try again later.');
-        } else if ((error.response?.data as any)?.message) {
+        } else if (error.response && error.response.data && (error.response.data as any)?.message) {
           toast.error((error.response.data as any).message);
         }
 

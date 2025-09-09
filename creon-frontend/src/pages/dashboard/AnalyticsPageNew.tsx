@@ -1,5 +1,25 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+
+// Define types for data structures used in this component
+interface LinkData {
+  _id: string;
+  title: string;
+  url: string;
+  shortCode: string;
+  isActive: boolean;
+  clickCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface AnalyticsItem {
+  timestamp: string;
+  linkTitle: string;
+  clicks: number;
+  views: number;
+  clickRate: number;
+}
 import { useQuery } from '@tanstack/react-query';
 import {
   EyeIcon,
@@ -7,9 +27,7 @@ import {
   ChartBarIcon,
   DocumentArrowDownIcon,
   SparklesIcon,
-  LinkIcon,
-  ShoppingBagIcon,
-  RectangleStackIcon,
+  LinkIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -46,13 +64,13 @@ const AnalyticsPageNew: React.FC = () => {
     recentAnalytics: []
   };
 
-  const links = linksData?.data?.data?.links || [];
+  const links: LinkData[] = linksData?.data?.data?.links || [];
 
   const handleExportData = () => {
     // Create CSV data
     const csvData = [
       ['Date', 'Link Title', 'Clicks', 'Views', 'Click Rate'],
-      ...stats.recentAnalytics.map((item: any) => [
+      ...stats.recentAnalytics.map((item: AnalyticsItem) => [
         new Date(item.timestamp).toLocaleDateString(),
         item.linkTitle || 'N/A',
         item.clicks || 0,
@@ -84,7 +102,7 @@ const AnalyticsPageNew: React.FC = () => {
           text: user?.bio || `Check out ${user?.username}'s profile`,
           url,
         });
-      } catch (error) {
+      } catch (_error) {
         // Fallback to clipboard
         await navigator.clipboard.writeText(url);
         // You could add a toast notification here
@@ -206,7 +224,7 @@ const AnalyticsPageNew: React.FC = () => {
                     <div>
                       <p className="text-gray-600 text-sm">Total Clicks</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {stats.totalClicks || links.reduce((sum, link) => sum + link.clickCount, 0)}
+                        {stats.totalClicks || links.reduce((sum: number, link: { clickCount: number }) => sum + link.clickCount, 0)}
                       </p>
                     </div>
                   </div>
@@ -290,10 +308,10 @@ const AnalyticsPageNew: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Links</h3>
             <div className="space-y-3">
               {links
-                .filter(link => link.isActive)
-                .sort((a, b) => b.clickCount - a.clickCount)
+                .filter((link: { isActive: boolean; }) => link.isActive)
+                .sort((a: { clickCount: number; }, b: { clickCount: number; }) => b.clickCount - a.clickCount)
                 .slice(0, 5)
-                .map((link, index) => (
+                .map((link: { _id: React.Key | null | undefined; title: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; url: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; clickCount: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }, index: number) => (
                 <div
                   key={link._id}
                   className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
@@ -314,7 +332,7 @@ const AnalyticsPageNew: React.FC = () => {
                 </div>
               ))}
               
-              {links.filter(link => link.isActive).length === 0 && (
+              {links.filter((link: { isActive: boolean }) => link.isActive).length === 0 && (
                 <div className="text-center py-8">
                   <LinkIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-600 text-sm">No active links yet</p>
@@ -365,7 +383,7 @@ const AnalyticsPageNew: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {links.slice(0, 10).map((link) => (
+                {links.slice(0, 10).map((link: any) => (
                   <tr key={link._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">

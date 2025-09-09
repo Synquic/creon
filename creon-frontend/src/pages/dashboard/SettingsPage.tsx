@@ -31,7 +31,7 @@ const passwordSchema = z.object({
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
 const SettingsPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('security');
 
   const changePasswordMutation = useMutation({

@@ -1,24 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   PlusIcon,
   ShoppingBagIcon,
   RectangleStackIcon,
   XMarkIcon,
-  EyeSlashIcon,
   EyeIcon,
   ChartBarIcon,
   ShareIcon,
-  TrashIcon,
-  PencilIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import Button from '../../components/ui/Button';
 import PublicProfilePreview from '../../components/PublicProfilePreview';
 import * as simpleApi from '../../services/api-simple';
-import toast from 'react-hot-toast';
 
 interface ShopSettings {
   isVisible: boolean;
@@ -43,17 +41,17 @@ const ShopPage: React.FC = () => {
     enabled: !!user,
   });
 
-  // Update shop settings mutation
-  const updateShopSettingsMutation = useMutation({
-    mutationFn: simpleApi.updateShopSettings,
-    onSuccess: () => {
-      toast.success('Shop settings updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['shop-settings'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update shop settings');
-    },
-  });
+  // // Update shop settings mutation
+  // const updateShopSettingsMutation = useMutation({
+  //   mutationFn: simpleApi.updateShopSettings,
+  //   onSuccess: () => {
+  //     toast.success('Shop settings updated successfully');
+  //     queryClient.invalidateQueries({ queryKey: ['shop-settings'] });
+  //   },
+  //   onError: (error: any) => {
+  //     toast.error(error.response?.data?.message || 'Failed to update shop settings');
+  //   },
+  // });
 
   // Set shop settings from API
   useEffect(() => {
@@ -68,14 +66,14 @@ const ShopPage: React.FC = () => {
     }
   }, [shopSettingsData]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
 
-  const { data: productsData, isLoading: productsLoading } = useQuery({
+  const { data: productsData } = useQuery({
     queryKey: ['products'],
     queryFn: () => simpleApi.getProducts(),
   });
 
-  const { data: collectionsData, isLoading: collectionsLoading } = useQuery({
+  const { data: collectionsData } = useQuery({
     queryKey: ['collections'],
     queryFn: () => simpleApi.getCollections(),
   });
@@ -134,7 +132,7 @@ const ShopPage: React.FC = () => {
                     {shopSettings.isVisible ? (
                       <EyeIcon className="w-6 h-6 text-gray-600" />
                     ) : (
-                      <EyeOffIcon className="w-6 h-6 text-gray-600" />
+                      <EyeIcon className="w-6 h-6 text-gray-600" />
                     )}
                   </div>
                   <div>
@@ -206,7 +204,7 @@ const ShopPage: React.FC = () => {
               <div className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Collections</h2>
                 <div className="space-y-4">
-                  {collections.map((collection, index) => (
+                  {collections.map((collection: { _id: React.Key | null | undefined; title: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; description: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; isActive: any; }, index: number) => (
                     <motion.div
                       key={collection._id}
                       initial={{ opacity: 0, y: 20 }}
@@ -294,11 +292,11 @@ const ShopPage: React.FC = () => {
             )}
 
             {/* Individual Products Section */}
-            {products.filter(p => !p.collectionId).length > 0 && (
+            {products.filter((p: { collectionId: any; }) => !p.collectionId).length > 0 && (
               <div className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Individual Products</h2>
                 <div className="space-y-4">
-                  {products.filter(p => !p.collectionId).map((product, index) => (
+                  {products.filter((p: { collectionId: any; }) => !p.collectionId).map((product: { _id: React.Key | null | undefined; title: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; description: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; clickCount: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; currency: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; price: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; isActive: any; }, index: number) => (
                     <motion.div
                       key={product._id}
                       initial={{ opacity: 0, y: 20 }}
@@ -381,7 +379,9 @@ const ShopPage: React.FC = () => {
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">Shop Preview</h2>
                 <p className="text-sm text-gray-600">See how your shop looks</p>
               </div>
-              <PublicProfilePreview />
+              <PublicProfilePreview 
+                hideBranding={false}
+              />
             </div>
           </div>
         </div>

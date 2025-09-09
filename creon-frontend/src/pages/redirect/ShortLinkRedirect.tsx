@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import * as simpleApi from '../../services/api-simple';
 
 const ShortLinkRedirect: React.FC = () => {
   const { shortCode } = useParams<{ shortCode: string }>();

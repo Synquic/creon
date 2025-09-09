@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, } from 'framer-motion';
 import {
   HomeIcon,
   LinkIcon,
@@ -14,11 +14,9 @@ import {
   RectangleStackIcon,
   EyeIcon,
   ShareIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
-import Button from '../ui/Button';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

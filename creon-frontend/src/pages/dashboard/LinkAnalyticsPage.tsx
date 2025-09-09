@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
-  EyeIcon,
   CursorArrowRaysIcon,
   ChartBarIcon,
   ArrowLeftIcon,
@@ -81,7 +80,7 @@ const LinkAnalyticsPage: React.FC = () => {
     },
   };
 
-  const { data, isLoading } = useQuery({
+  const { isLoading } = useQuery({
     queryKey: ['linkAnalytics', linkId, selectedPeriod],
     queryFn: () => apiService.getLinkAnalytics(linkId!, selectedPeriod),
     enabled: !!linkId,

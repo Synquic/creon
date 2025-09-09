@@ -40,11 +40,13 @@ interface PreviewCollection {
 interface PublicProfilePreviewProps {
   className?: string;
   hideBranding?: boolean;
+  links?: PreviewLink[];
 }
 
 const PublicProfilePreview: React.FC<PublicProfilePreviewProps> = ({ 
   className = '', 
-  hideBranding = false
+  hideBranding = false,
+  links: propLinks
 }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'links' | 'shop'>('links');
@@ -65,7 +67,7 @@ const PublicProfilePreview: React.FC<PublicProfilePreviewProps> = ({
 
   // Extract data from the actual API response
   const userProfile = profileData?.data?.data?.user;
-  const links = profileData?.data?.data?.links || [];
+  const links = propLinks || profileData?.data?.data?.links || [];
   const products = profileData?.data?.data?.products || [];
   const collections = profileData?.data?.data?.collections || [];
   const theme = userProfile?.theme;
