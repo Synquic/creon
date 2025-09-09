@@ -259,10 +259,10 @@ export const createCollection = async (data: any) => {
   }
 };
 
-export const updateCollection = async (id: string, data: any) => {
+export const updateCollection = async (id: string, title: string, data: any) => {
   console.log('📝 Updating collection:', id, data);
   try {
-    const response = await axiosInstance.put(`/collections/${id}`, data);
+    const response = await axiosInstance.put(`/collections/${id}`, { title, ...data });
     console.log('✅ Collection updated successfully');
     return response;
   } catch (error) {

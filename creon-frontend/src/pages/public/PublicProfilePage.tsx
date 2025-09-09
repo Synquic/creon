@@ -110,10 +110,22 @@ const PublicProfilePage: React.FC = () => {
   
   // Extract data safely
   const { user, links, collections, products } = profileData?.data?.data || {};
+  
+  // Debug log to check collections and products data
+  console.log('Profile Data:', {
+    collectionsCount: collections?.length || 0,
+    productsCount: products?.length || 0,
+    collectionProducts: collections?.map((c: ProductCollection) => ({
+      collectionId: c._id,
+      productIds: c.products,
+      productCount: c.products?.length || 0
+    }))
+  });
 
   // Set default tab based on shop settings
   useEffect(() => {
-    if (shopSettings.isMainTab && shopSettings.isVisible && ((products && products.length > 0) || (collections && collections.length > 0))) {
+    // Show the shop tab if it's set as main tab or if there are products/collections
+    if ((shopSettings.isMainTab || shopSettings.isVisible) && ((products && products.length > 0) || (collections && collections.length > 0))) {
       setActiveTab('shop');
     }
   }, [shopSettings.isMainTab, shopSettings.isVisible, products, collections]);
@@ -436,7 +448,8 @@ const PublicProfilePage: React.FC = () => {
                 <LinkIcon className="w-4 h-4 mr-2 inline" />
                 Links
               </button>
-              {shopSettings.isVisible && ((products && products.length > 0) || (collections && collections.length > 0)) && (
+              {/* Always show shop tab if products or collections exist, regardless of shopSettings.isVisible */}
+              {((products && products.length > 0) || (collections && collections.length > 0)) && (
                 <button
                   onClick={() => setActiveTab('shop')}
                   className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
@@ -559,84 +572,319 @@ const PublicProfilePage: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: collectionIndex * 0.1 }}
+                className="mb-8"
               >
-                <div className="mb-4">
-                  <h2 className="text-xl font-bold flex items-center" style={{ color: theme.textColor || '#1f2937' }}>
-                    <ShoppingBagIcon className="w-6 h-6 mr-2 text-green-600" />
-                    {collection.title}
-                  </h2>
-                  {collection.description && (
-                    <p className="mt-1" style={{ color: theme.textColor || '#6b7280', opacity: 0.8 }}>{collection.description}</p>
-                  )}
-                </div>
+                {collection.image && (
+                  <motion.div 
+                    className="relative mb-4 overflow-hidden"
+                    initial={{ opacity: 0.6 }}
+                    animate={{ opacity: 1 }}
+                    style={{
+                      borderRadius: getLinkButtonRadius(),
+                      boxShadow: theme.buttonShadow ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none',
+                    }}
+                  >
+                    <img
+                      src={collection.image}
+                      alt={collection.title}
+                      className="w-full h-40 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                      <div>
+                        <h2 
+                          className="text-xl font-bold text-white mb-1"
+                          style={{ 
+                            fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                            fontSize: theme.fontSize === 'small' ? '18px' : theme.fontSize === 'large' ? '24px' : '20px',
+                            fontWeight: theme.fontWeight === 'light' ? 300 : 
+                                      theme.fontWeight === 'medium' ? 500 : 
+                                      theme.fontWeight === 'semibold' ? 600 : 
+                                      theme.fontWeight === 'bold' ? 700 : 400
+                          }}
+                        >
+                          {collection.title}
+                        </h2>
+                        {collection.description && (
+                          <p className="text-white/80 text-sm"
+                            style={{ 
+                              fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                              fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                            }}
+                          >
+                            {collection.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+                
+                {!collection.image && (
+                  <div className="mb-4 pb-2 border-b" style={{ 
+                    borderColor: theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb', 
+                  }}>
+                    <h2 
+                      className="text-xl font-bold flex items-center" 
+                      style={{ 
+                        color: theme.textColor || '#1f2937',
+                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                        fontSize: theme.fontSize === 'small' ? '18px' : theme.fontSize === 'large' ? '24px' : '20px',
+                        fontWeight: theme.fontWeight === 'light' ? 300 : 
+                                  theme.fontWeight === 'medium' ? 500 : 
+                                  theme.fontWeight === 'semibold' ? 600 : 
+                                  theme.fontWeight === 'bold' ? 700 : 400
+                      }}
+                    >
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center mr-3" 
+                        style={{
+                          backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
+                        }}
+                      >
+                        <ShoppingBagIcon className="w-5 h-5" style={{ color: theme.primaryColor || '#16a34a' }} />
+                      </div>
+                      {collection.title}
+                    </h2>
+                    {collection.description && (
+                      <p className="mt-1 ml-11 text-sm" style={{ 
+                        color: theme.textColor || '#6b7280', 
+                        opacity: 0.8,
+                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                        fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                      }}>
+                        {collection.description}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
-                  {/* This would be populated with products from the collection */}
-                  {products?.filter((p: Product) => p.collectionId === collection._id).map((product: Product) => (
-                    <Card
-                      key={product._id}
-                      onClick={() => handleProductClick(product)}
-                      hover
-                      className="cursor-pointer"
+                  {/* Check if the collection has any products */}
+                  {products?.filter((p: Product) => collection.products?.includes(p._id)).length === 0 ? (
+                    <div 
+                      className="col-span-2 text-center py-6 rounded-lg"
+                      style={{
+                        backgroundColor: `${theme.backgroundColor || '#ffffff'}`,
+                        border: `1px dashed ${theme.primaryColor ? `${theme.primaryColor}40` : '#e5e7eb'}`,
+                        borderRadius: getLinkButtonRadius(),
+                      }}
                     >
-                      <img
-                        src={product.image}
-                        alt={product.title}
-                        className="w-full h-32 object-cover rounded-lg mb-3"
+                      <ShoppingBagIcon 
+                        className="w-8 h-8 mx-auto mb-2 opacity-60" 
+                        style={{ color: theme.primaryColor || '#16a34a' }} 
                       />
-                      <h4 className="font-semibold text-sm mb-1" style={{ color: theme.textColor || '#1f2937' }}>
-                        {product.title}
-                      </h4>
-                      {product.price && (
-                        <p className="text-green-600 font-bold text-sm">
-                          {product.formattedPrice}
-                        </p>
-                      )}
-                    </Card>
-                  ))}
+                      <p style={{ 
+                        color: theme.textColor || '#6b7280', 
+                        opacity: 0.7,
+                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                      }}>
+                        No products in this collection yet
+                      </p>
+                    </div>
+                  ) : (
+                    /* Find products that belong to this collection */
+                    products?.filter((p: Product) => 
+                      // Check if this product's ID is included in the collection's products array
+                      collection.products?.includes(p._id)
+                    ).map((product: Product) => (
+                      <motion.div
+                        key={product._id}
+                        whileHover={{ 
+                          scale: theme.buttonAnimation === 'hover-scale' ? 1.03 : 1,
+                          y: theme.buttonAnimation === 'hover-lift' ? -5 : 0,
+                          boxShadow: theme.buttonAnimation === 'hover-glow' ? '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' : ''
+                        }}
+                        className="cursor-pointer overflow-hidden transition-all duration-300"
+                        onClick={() => handleProductClick(product)}
+                        style={{
+                          backgroundColor: theme.backgroundColor || '#ffffff',
+                          borderRadius: getLinkButtonRadius(),
+                          boxShadow: theme.buttonShadow ? '0 2px 5px rgba(0, 0, 0, 0.08)' : 'none',
+                          border: `${theme.buttonBorderWidth || 1}px solid ${theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb'}`,
+                        }}
+                      >
+                        <div className="relative">
+                          <img
+                            src={product.image}
+                            alt={product.title}
+                            className="w-full h-32 object-cover"
+                            style={{
+                              borderTopLeftRadius: getLinkButtonRadius(),
+                              borderTopRightRadius: getLinkButtonRadius(),
+                            }}
+                          />
+                          <div 
+                            className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent"
+                            style={{
+                              borderBottomLeftRadius: getLinkButtonRadius(),
+                              borderBottomRightRadius: getLinkButtonRadius(),
+                            }}
+                          ></div>
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-semibold text-sm mb-1 line-clamp-2" style={{ 
+                            color: theme.textColor || '#1f2937',
+                            fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                            fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                            fontWeight: theme.fontWeight || 'normal',
+                          }}>
+                            {product.title}
+                          </h4>
+                          {product.price && (
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="font-bold" style={{ 
+                                color: theme.primaryColor || '#16a34a',
+                                fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                              }}>
+                                {product.currency === 'INR' 
+                                  ? `₹${product.price.toFixed(2)}`
+                                  : product.currency === 'USD'
+                                    ? `$${product.price.toFixed(2)}`
+                                    : `${product.currency} ${product.price.toFixed(2)}`}
+                              </p>
+                              <button 
+                                className="text-xs py-1 px-2 rounded-full"
+                                style={{
+                                  backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
+                                  color: theme.primaryColor || '#16a34a',
+                                  fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`
+                                }}
+                              >
+                                Shop Now
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
                 </div>
               </motion.div>
             ))}
           </div>
         )}
 
-        {/* Individual Products */}
-        {activeTab === 'shop' && products && products.filter((p: Product) => !p.collectionId).length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-            className="mt-8"
-          >
-            <h2 className="text-xl font-bold mb-4 flex items-center" style={{ color: theme.textColor || '#1f2937' }}>
-              <ShoppingBagIcon className="w-6 h-6 mr-2 text-green-600" />
-              Featured Products
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              {products?.filter((p: Product) => !p.collectionId).map((product: Product) => (
-                <Card
-                  key={product._id}
-                  onClick={() => handleProductClick(product)}
-                  hover
-                  className="cursor-pointer"
+        {/* Individual Products - those not in any collection */}
+        {activeTab === 'shop' && products && (
+          <>
+            {(() => {
+              // Get all product IDs that are part of collections
+              const collectionProductIds = collections?.flatMap((c: ProductCollection) => c.products || []) || [];
+              // Filter out products that don't belong to any collection
+              const individualProducts = products.filter((p: Product) => !collectionProductIds.includes(p._id));
+              
+              if (individualProducts.length === 0) return null;
+              
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.5 }}
+                  className="mt-8"
                 >
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    className="w-full h-32 object-cover rounded-lg mb-3"
-                  />
-                  <h4 className="font-semibold text-sm mb-1" style={{ color: theme.textColor || '#1f2937' }}>
-                    {product.title}
-                  </h4>
-                  {product.price && (
-                    <p className="text-green-600 font-bold text-sm">
-                      {product.formattedPrice}
-                    </p>
-                  )}
-                </Card>
-              ))}
-            </div>
-          </motion.div>
+                  <div className="mb-4 pb-2 border-b" style={{ 
+                    borderColor: theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb', 
+                  }}>
+                    <h2 
+                      className="text-xl font-bold flex items-center" 
+                      style={{ 
+                        color: theme.textColor || '#1f2937',
+                        fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                        fontSize: theme.fontSize === 'small' ? '18px' : theme.fontSize === 'large' ? '24px' : '20px',
+                        fontWeight: theme.fontWeight === 'light' ? 300 : 
+                                  theme.fontWeight === 'medium' ? 500 : 
+                                  theme.fontWeight === 'semibold' ? 600 : 
+                                  theme.fontWeight === 'bold' ? 700 : 400
+                      }}
+                    >
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center mr-3" 
+                        style={{
+                          backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
+                        }}
+                      >
+                        <ShoppingBagIcon className="w-5 h-5" style={{ color: theme.primaryColor || '#16a34a' }} />
+                      </div>
+                      Featured Products
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {individualProducts.map((product: Product) => (
+                      <motion.div
+                        key={product._id}
+                        whileHover={{ 
+                          scale: theme.buttonAnimation === 'hover-scale' ? 1.03 : 1,
+                          y: theme.buttonAnimation === 'hover-lift' ? -5 : 0,
+                          boxShadow: theme.buttonAnimation === 'hover-glow' ? '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' : ''
+                        }}
+                        className="cursor-pointer overflow-hidden transition-all duration-300"
+                        onClick={() => handleProductClick(product)}
+                        style={{
+                          backgroundColor: theme.backgroundColor || '#ffffff',
+                          borderRadius: getLinkButtonRadius(),
+                          boxShadow: theme.buttonShadow ? '0 2px 5px rgba(0, 0, 0, 0.08)' : 'none',
+                          border: `${theme.buttonBorderWidth || 1}px solid ${theme.primaryColor ? `${theme.primaryColor}20` : '#e5e7eb'}`,
+                        }}
+                      >
+                        <div className="relative">
+                          <img
+                            src={product.image}
+                            alt={product.title}
+                            className="w-full h-32 object-cover"
+                            style={{
+                              borderTopLeftRadius: getLinkButtonRadius(),
+                              borderTopRightRadius: getLinkButtonRadius(),
+                            }}
+                          />
+                          <div 
+                            className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent"
+                            style={{
+                              borderBottomLeftRadius: getLinkButtonRadius(),
+                              borderBottomRightRadius: getLinkButtonRadius(),
+                            }}
+                          ></div>
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-semibold text-sm mb-1 line-clamp-2" style={{ 
+                            color: theme.textColor || '#1f2937',
+                            fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`,
+                            fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                            fontWeight: theme.fontWeight || 'normal',
+                          }}>
+                            {product.title}
+                          </h4>
+                          {product.price && (
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="font-bold" style={{ 
+                                color: theme.primaryColor || '#16a34a',
+                                fontSize: theme.fontSize === 'small' ? '12px' : theme.fontSize === 'large' ? '16px' : '14px',
+                              }}>
+                                {product.currency === 'INR' 
+                                  ? `₹${product.price.toFixed(2)}`
+                                  : product.currency === 'USD'
+                                    ? `$${product.price.toFixed(2)}`
+                                    : `${product.currency} ${product.price.toFixed(2)}`}
+                              </p>
+                              <button 
+                                className="text-xs py-1 px-2 rounded-full"
+                                style={{
+                                  backgroundColor: `${theme.primaryColor || '#16a34a'}20`,
+                                  color: theme.primaryColor || '#16a34a',
+                                  fontFamily: `"${theme.fontFamily || 'Inter'}", system-ui, -apple-system, sans-serif`
+                                }}
+                              >
+                                Shop Now
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })()}
+          </>
         )}
 
         {/* Tab-specific Empty State */}

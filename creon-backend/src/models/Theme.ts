@@ -47,7 +47,6 @@ const themeSchema = new Schema<ThemeDocument>(
     userId: {
       type: String,
       required: true,
-      index: true,
       unique: true
     },
     

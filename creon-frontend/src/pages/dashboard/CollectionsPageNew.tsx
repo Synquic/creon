@@ -19,6 +19,28 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import * as simpleApi from '../../services/api-simple';
 
+interface ApiErrorResponse {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+interface Product {
+  _id: string;
+  title: string;
+  description?: string;
+  price: number;
+  currency: string;
+  image?: string;
+  affiliateUrl: string;
+  shortCode: string;
+  clickCount: number;
+  isActive: boolean;
+}
+
 interface Collection {
   _id: string;
   userId: string;
@@ -35,20 +57,30 @@ const collectionSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
   description: z.string().max(500, 'Description too long').optional().or(z.literal('')),
   image: z.string().optional(),
+  products: z.array(z.string()).default([]),
 });
 
-type CollectionFormData = z.infer<typeof collectionSchema>;
+// Define form data types for Zod validation
+// z.infer<typeof collectionSchema>;
 
 const CollectionsPageNew: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const queryClient = useQueryClient();
 
-  const { data: collectionsData, isLoading, error } = useQuery({
+  const { data: collectionsData, isLoading: collectionsLoading, error: collectionsError } = useQuery({
     queryKey: ['collections'],
     queryFn: () => simpleApi.getCollections(),
+  });
+
+  // Fetch products to select for collections
+  const { data: productsData, isLoading: productsLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => simpleApi.getProducts(),
   });
 
   const createCollectionMutation = useMutation({
@@ -60,14 +92,14 @@ const CollectionsPageNew: React.FC = () => {
       setCurrentImage(null);
       reset();
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'Failed to create collection';
+    onError: (error: Error) => {
+      const errorMessage = (error as ApiErrorResponse).response?.data?.message || 'Failed to create collection';
       toast.error(errorMessage);
     },
   });
 
   const updateCollectionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
       simpleApi.updateCollection(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
@@ -77,8 +109,8 @@ const CollectionsPageNew: React.FC = () => {
       setCurrentImage(null);
       reset();
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'Failed to update collection';
+    onError: (error: Error) => {
+      const errorMessage = (error as ApiErrorResponse).response?.data?.message || 'Failed to update collection';
       toast.error(errorMessage);
     },
   });
@@ -89,18 +121,19 @@ const CollectionsPageNew: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
       toast.success('Collection deleted successfully!');
     },
-    onError: (error: any) => {
+    onError: () => {
       toast.error('Failed to delete collection');
     },
   });
 
   const toggleCollectionMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
-      simpleApi.updateCollection(id, { isActive }),
+    mutationFn: ({ id, title, isActive }: { id: string; title: string; isActive: boolean }) =>
+      simpleApi.updateCollection(id, title, { isActive }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
+      toast.success('Collection status updated successfully');
     },
-    onError: (error: any) => {
+    onError: () => {
       toast.error('Failed to toggle collection status');
     },
   });
@@ -114,8 +147,8 @@ const CollectionsPageNew: React.FC = () => {
       toast.success('Image uploaded successfully!');
       setUploadingImage(false);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to upload image');
+    onError: (error: Error) => {
+      toast.error((error as ApiErrorResponse).response?.data?.message || 'Failed to upload image');
       setUploadingImage(false);
     },
   });
@@ -126,17 +159,26 @@ const CollectionsPageNew: React.FC = () => {
     reset,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<CollectionFormData>({
+  } = useForm({
     resolver: zodResolver(collectionSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      image: '',
+      products: [] as string[],
+    }
   });
 
   const collections: Collection[] = collectionsData?.data?.data?.collections || [];
 
-  const onSubmit = async (data: CollectionFormData) => {
+  const onSubmit = async (data: Record<string, unknown>) => {
     const cleanData = {
-      title: data.title,
-      description: data.description && data.description.trim() !== '' ? data.description : undefined,
-      image: currentImage || data.image,
+      title: data.title as string,
+      description: typeof data.description === 'string' && data.description.trim() !== '' 
+        ? data.description.trim() 
+        : undefined,
+      image: currentImage || (data.image as string),
+      products: selectedProducts,
     };
 
     try {
@@ -145,7 +187,7 @@ const CollectionsPageNew: React.FC = () => {
       } else {
         await createCollectionMutation.mutateAsync(cleanData);
       }
-    } catch (error) {
+    } catch {
       // Error handled in mutation
     }
   };
@@ -155,6 +197,8 @@ const CollectionsPageNew: React.FC = () => {
     setValue('title', collection.title);
     setValue('description', collection.description || '');
     setValue('image', collection.image || '');
+    setValue('products', collection.products || []);
+    setSelectedProducts(collection.products || []);
     setCurrentImage(collection.image || null);
     setShowCreateForm(true);
   };
@@ -166,7 +210,16 @@ const CollectionsPageNew: React.FC = () => {
   };
 
   const handleToggleActive = async (collection: Collection) => {
-    await toggleCollectionMutation.mutateAsync({ id: collection._id, isActive: !collection.isActive });
+    try {
+      await toggleCollectionMutation.mutateAsync({ 
+        id: collection._id, 
+        title: collection.title,
+        isActive: !collection.isActive 
+      });
+    } catch (error) {
+      console.error('Error toggling collection status:', error);
+      // Error is already handled in the mutation
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,17 +244,19 @@ const CollectionsPageNew: React.FC = () => {
     setShowCreateForm(false);
     setEditingCollection(null);
     setCurrentImage(null);
+    setSelectedProducts([]);
+    setSearchTerm('');
     reset();
   };
 
-  if (error) {
+  if (collectionsError) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Collections</h3>
             <p className="text-gray-600">
-              {(error as any)?.response?.data?.message || 'Something went wrong'}
+              {(collectionsError as Error)?.message || 'Something went wrong'}
             </p>
           </div>
         </div>
@@ -319,7 +374,103 @@ const CollectionsPageNew: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex space-x-4">
+                {/* Product Selection */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Products
+                  </label>
+                  
+                  {/* Search input */}
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      placeholder="Search products by name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                  </div>
+                  
+                  {/* Selected products count */}
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''} selected
+                    </span>
+                    {selectedProducts.length > 0 && (
+                      <button
+                        onClick={() => {
+                          setSelectedProducts([]);
+                          setValue('products', []);
+                        }}
+                        className="text-xs text-primary-600 hover:text-primary-800 hover:underline"
+                        type="button"
+                      >
+                        Clear all
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Product list */}
+                  <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                    {productsLoading ? (
+                      <div className="flex items-center justify-center p-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary-200 border-t-primary-700"></div>
+                      </div>
+                    ) : productsData?.data?.data?.products?.length ? (
+                      <div className="divide-y divide-gray-200">
+                        {productsData.data.data.products
+                          .filter((product: Product) => 
+                            product.title.toLowerCase().includes(searchTerm.toLowerCase())
+                          )
+                          .map((product: Product) => (
+                            <div 
+                              key={product._id}
+                              className="flex items-center p-3 hover:bg-gray-50"
+                            >
+                              <input
+                                type="checkbox"
+                                id={`product-${product._id}`}
+                                checked={selectedProducts.includes(product._id)}
+                                onChange={() => {
+                                  const updatedSelection = selectedProducts.includes(product._id)
+                                    ? selectedProducts.filter(id => id !== product._id)
+                                    : [...selectedProducts, product._id];
+                                  
+                                  setSelectedProducts(updatedSelection);
+                                  setValue('products', updatedSelection);
+                                }}
+                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                              />
+                              <div className="ml-3 flex items-center">
+                                {product.image && (
+                                  <img 
+                                    src={product.image}
+                                    alt={product.title}
+                                    className="h-10 w-10 object-cover rounded mr-3"
+                                  />
+                                )}
+                                <div>
+                                  <p className="font-medium text-gray-900">{product.title}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {new Intl.NumberFormat(undefined, {
+                                      style: 'currency',
+                                      currency: product.currency
+                                    }).format(product.price)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">
+                        No products available to add to this collection
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex space-x-4 mt-6">
                   <Button
                     type="submit"
                     isLoading={isSubmitting}
@@ -342,7 +493,7 @@ const CollectionsPageNew: React.FC = () => {
         </AnimatePresence>
 
         {/* Collections List */}
-        {isLoading ? (
+        {collectionsLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-700"></div>
           </div>

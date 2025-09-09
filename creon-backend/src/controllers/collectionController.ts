@@ -131,7 +131,7 @@ export const updateCollection = async (req: AuthRequest, res: Response): Promise
     const { id } = req.params;
     const userId = req.user?.id;
     const { title, description, image, products, isActive, order } = req.body;
-
+    
     let updateData: any = { title, description, image, isActive };
 
     if (order !== undefined) {

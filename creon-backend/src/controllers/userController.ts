@@ -127,8 +127,7 @@ export const getUserProfile = async (req: Request, res: Response): Promise<void>
 
     const products = await Product.find({
       userId: (user._id as any).toString(),
-      isActive: true,
-      collectionId: null
+      isActive: true
     });
 
     await Analytics.create({
