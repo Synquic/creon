@@ -32,7 +32,7 @@ const updateTheme = async (req, res) => {
             'fontFamily', 'fontSize', 'fontWeight',
             'buttonStyle', 'buttonShadow', 'buttonBorderWidth', 'buttonAnimation',
             'profileImageShape', 'profileImageSize', 'linkSpacing', 'maxWidth',
-            'backgroundGradient', 'gradientDirection', 'backdropBlur',
+            'backgroundGradient', 'gradientDirection', 'backdropBlur', 'hideBranding',
             'customCss'
         ];
         const updateData = {};
@@ -88,7 +88,8 @@ const getPublicTheme = async (req, res) => {
             maxWidth: 'normal',
             backgroundGradient: false,
             gradientDirection: 'vertical',
-            backdropBlur: false
+            backdropBlur: false,
+            hideBranding: false
         };
         res.json({
             success: true,

@@ -1,7 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDashboardStats = exports.checkUsernameAvailability = exports.getUserProfile = exports.changePassword = exports.updateProfile = void 0;
 const models_1 = require("../models");
+const Theme_1 = require("../models/Theme");
+const ShopSettings_1 = __importDefault(require("../models/ShopSettings"));
 const updateProfile = async (req, res) => {
     try {
         const { firstName, lastName, bio, socialLinks, theme } = req.body;
@@ -19,6 +24,10 @@ const updateProfile = async (req, res) => {
             });
             return;
         }
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const profileImageUrl = user.profileImage ?
+            (user.profileImage.startsWith('http') ? user.profileImage : `${baseUrl}${user.profileImage}`) :
+            null;
         res.json({
             success: true,
             message: 'Profile updated successfully',
@@ -30,7 +39,7 @@ const updateProfile = async (req, res) => {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     bio: user.bio,
-                    profileImage: user.profileImage,
+                    profileImage: profileImageUrl,
                     socialLinks: user.socialLinks,
                     theme: user.theme,
                     profileUrl: `/${user.username}`
@@ -103,8 +112,7 @@ const getUserProfile = async (req, res) => {
         }).sort({ order: 1 });
         const products = await models_1.Product.find({
             userId: user._id.toString(),
-            isActive: true,
-            collectionId: null
+            isActive: true
         });
         await models_1.Analytics.create({
             userId: user._id.toString(),
@@ -113,21 +121,29 @@ const getUserProfile = async (req, res) => {
             userAgent: req.get('User-Agent') || 'unknown',
             timestamp: new Date()
         });
+        const theme = await Theme_1.Theme.findOne({ userId: user._id.toString() });
+        const shopSettings = await ShopSettings_1.default.findOne({ userId: user._id.toString() });
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const profileImageUrl = user.profileImage ?
+            (user.profileImage.startsWith('http') ? user.profileImage : `${baseUrl}${user.profileImage}`) :
+            null;
         res.json({
             success: true,
             data: {
                 user: {
+                    id: user._id.toString(),
                     username: user.username,
                     firstName: user.firstName,
                     lastName: user.lastName,
                     bio: user.bio,
-                    profileImage: user.profileImage,
+                    profileImage: profileImageUrl,
                     socialLinks: user.socialLinks,
-                    theme: user.theme
+                    theme: theme
                 },
                 links,
                 collections,
-                products
+                products,
+                shopSettings: shopSettings || { isVisible: false, isMainTab: false }
             }
         });
     }

@@ -6,7 +6,6 @@ const themeSchema = new mongoose_1.Schema({
     userId: {
         type: String,
         required: true,
-        index: true,
         unique: true
     },
     backgroundColor: {
@@ -97,6 +96,10 @@ const themeSchema = new mongoose_1.Schema({
         enum: ['vertical', 'horizontal', 'diagonal']
     },
     backdropBlur: {
+        type: Boolean,
+        default: false
+    },
+    hideBranding: {
         type: Boolean,
         default: false
     },

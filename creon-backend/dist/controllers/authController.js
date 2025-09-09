@@ -277,6 +277,10 @@ const getProfile = async (req, res) => {
             });
             return;
         }
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const profileImageUrl = user.profileImage ?
+            (user.profileImage.startsWith('http') ? user.profileImage : `${baseUrl}${user.profileImage}`) :
+            null;
         res.json({
             success: true,
             data: {
@@ -287,7 +291,7 @@ const getProfile = async (req, res) => {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     bio: user.bio,
-                    profileImage: user.profileImage,
+                    profileImage: profileImageUrl,
                     role: user.role,
                     socialLinks: user.socialLinks,
                     theme: user.theme,

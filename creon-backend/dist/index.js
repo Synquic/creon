@@ -23,6 +23,8 @@ const metadata_1 = __importDefault(require("./routes/metadata"));
 const theme_1 = __importDefault(require("./routes/theme"));
 const roles_1 = __importDefault(require("./routes/roles"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
+const shopSettings_1 = __importDefault(require("./routes/shopSettings"));
+const dataParsing_1 = __importDefault(require("./routes/dataParsing"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -47,6 +49,8 @@ app.use('/api/metadata', metadata_1.default);
 app.use('/api/theme', theme_1.default);
 app.use('/api/roles', roles_1.default);
 app.use('/api/analytics', analytics_1.default);
+app.use('/api/shop', shopSettings_1.default);
+app.use('/api/data-parsing', dataParsing_1.default);
 app.use('/', redirect_1.default);
 app.get('/api/health', (req, res) => {
     res.json({

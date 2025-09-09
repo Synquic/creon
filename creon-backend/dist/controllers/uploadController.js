@@ -11,7 +11,8 @@ const uploadImage = async (req, res) => {
             });
             return;
         }
-        const imageUrl = `/uploads/${req.file.filename}`;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
         res.json({
             success: true,
             message: 'Image uploaded successfully',
@@ -41,7 +42,8 @@ const uploadProfileImage = async (req, res) => {
             });
             return;
         }
-        const imageUrl = `/uploads/${req.file.filename}`;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
         const userId = req.user?.id;
         const user = await models_1.User.findByIdAndUpdate(userId, { profileImage: imageUrl }, { new: true });
         if (!user) {

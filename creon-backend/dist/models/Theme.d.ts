@@ -20,6 +20,7 @@ export interface ThemeDocument extends Document {
     backgroundGradient: boolean;
     gradientDirection: 'vertical' | 'horizontal' | 'diagonal';
     backdropBlur: boolean;
+    hideBranding: boolean;
     customCss?: string;
     createdAt: Date;
     updatedAt: Date;
