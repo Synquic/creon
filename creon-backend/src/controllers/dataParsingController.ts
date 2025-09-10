@@ -5,6 +5,7 @@ import { AuthRequest } from '../middleware/auth';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import NodeCache from "node-cache";
+import { logger } from '../index';
 
 dotenv.config();
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -42,18 +43,18 @@ export const fetchResponse = async (req: AuthRequest, res: Response): Promise<vo
             });
             return;
         }
-        console.log('Fetched HTML length:', html.length);
+        logger.info('Fetched HTML length:', html.length);
 
 
     // Use cheerio to extract the <body> HTML
     const $ = cheerio.load(html);
     const mainContent = $('body').html() || html;
     // Optionally log the main content length
-    console.log('Main content length:', mainContent.length);
+    logger.info('Main content length:', mainContent.length);
     // Divide main content into 4 parts, send 2nd and 3rd parts only
     const partLength = Math.ceil(mainContent.length / 4);
     const mainContentPart = mainContent.slice(partLength, partLength * 3);
-    console.log('Sending part length:', mainContentPart.length);
+    logger.info ('Sending part length:', mainContentPart.length);
 
 
         // Compose a strict system and user prompt for the LLM
@@ -98,7 +99,7 @@ export const fetchResponse = async (req: AuthRequest, res: Response): Promise<vo
             }
         });
     } catch (error) {
-        console.error('Fetch response error:', error);
+        logger.error('Fetch response error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

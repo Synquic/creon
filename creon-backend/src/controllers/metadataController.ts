@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { fetchURLMetadata, fetchYouTubeMetadata } from '../services/urlMetadata';
 import { AuthRequest } from '../middleware/auth';
+import { logger } from '../index';
 
 export const fetchMetadata = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -40,7 +41,7 @@ export const fetchMetadata = async (req: AuthRequest, res: Response): Promise<vo
     });
 
   } catch (error) {
-    console.error('Fetch metadata error:', error);
+    logger.error('Fetch metadata error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch metadata'

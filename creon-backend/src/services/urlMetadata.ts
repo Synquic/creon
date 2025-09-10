@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { logger } from "../index";
 
 export interface URLMetadata {
   title?: string;
@@ -14,8 +15,8 @@ export interface URLMetadata {
 
 export const fetchURLMetadata = async (url: string): Promise<URLMetadata> => {
   try {
-    console.log('🔍 Fetching metadata for URL:', url);
-    
+    logger.info('🔍 Fetching metadata for URL:', url);
+
     const response = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -43,11 +44,11 @@ export const fetchURLMetadata = async (url: string): Promise<URLMetadata> => {
       type: extractType($)
     };
 
-    console.log('✅ Metadata extracted:', metadata);
+    logger.info('✅ Metadata extracted:', metadata);
     return metadata;
 
   } catch (error) {
-    console.error('❌ Error fetching metadata:', error);
+    logger.error('❌ Error fetching metadata:', error);
     return {
       url,
       title: extractDomainName(url),
@@ -206,7 +207,7 @@ export const fetchYouTubeMetadata = async (url: string): Promise<URLMetadata> =>
       type: 'video'
     };
   } catch (error) {
-    console.error('Error fetching YouTube metadata:', error);
+    logger.error('Error fetching YouTube metadata:', error);
     // Fallback to regular metadata extraction
     return fetchURLMetadata(url);
   }

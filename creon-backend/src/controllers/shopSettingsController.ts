@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import ShopSettings from '../models/ShopSettings';
+import { logger } from '../index';
 
 export const getShopSettings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -33,7 +34,7 @@ export const getShopSettings = async (req: AuthRequest, res: Response): Promise<
     });
 
   } catch (error) {
-    console.error('Get shop settings error:', error);
+    logger.error('Get shop settings error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -77,7 +78,7 @@ export const updateShopSettings = async (req: AuthRequest, res: Response): Promi
     });
 
   } catch (error) {
-    console.error('Update shop settings error:', error);
+    logger.error('Update shop settings error:', error);
     
     if ((error as any).name === 'ValidationError') {
       res.status(400).json({
@@ -131,7 +132,7 @@ export const getPublicShopSettings = async (req: Request, res: Response): Promis
     });
 
   } catch (error) {
-    console.error('Get public shop settings error:', error);
+    logger.error('Get public shop settings error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

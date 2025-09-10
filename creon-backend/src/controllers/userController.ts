@@ -3,6 +3,7 @@ import { User, Link, Product, ProductCollection, Analytics } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { Theme } from '../models/Theme';
 import ShopSettings from '../models/ShopSettings';
+import { logger } from '../index';
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -53,7 +54,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       }
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    logger.error('Update profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -93,7 +94,7 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
       message: 'Password changed successfully'
     });
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error('Change password error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -167,7 +168,7 @@ export const getUserProfile = async (req: Request, res: Response): Promise<void>
       }
     });
   } catch (error) {
-    console.error('Get user profile error:', error);
+    logger.error('Get user profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -188,7 +189,7 @@ export const checkUsernameAvailability = async (req: Request, res: Response): Pr
       }
     });
   } catch (error) {
-    console.error('Check username availability error:', error);
+    logger.error('Check username availability error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -248,7 +249,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
       }
     });
   } catch (error) {
-    console.error('Get dashboard stats error:', error);
+    logger.error('Get dashboard stats error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ProductCollection, Product } from '../models';
 import { AuthRequest } from '../middleware/auth';
+import { logger } from '../index';
 
 export const createCollection = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -47,7 +48,7 @@ export const createCollection = async (req: AuthRequest, res: Response): Promise
       data: { collection }
     });
   } catch (error) {
-    console.error('Create collection error:', error);
+    logger.error('Create collection error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -89,7 +90,7 @@ export const getCollections = async (req: AuthRequest, res: Response): Promise<v
       }
     });
   } catch (error) {
-    console.error('Get collections error:', error);
+    logger.error('Get collections error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -118,7 +119,7 @@ export const getCollectionById = async (req: AuthRequest, res: Response): Promis
       data: { collection }
     });
   } catch (error) {
-    console.error('Get collection by ID error:', error);
+    logger.error('Get collection by ID error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -192,7 +193,7 @@ export const updateCollection = async (req: AuthRequest, res: Response): Promise
       data: { collection }
     });
   } catch (error) {
-    console.error('Update collection error:', error);
+    logger.error('Update collection error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -225,7 +226,7 @@ export const deleteCollection = async (req: AuthRequest, res: Response): Promise
       message: 'Collection deleted successfully'
     });
   } catch (error) {
-    console.error('Delete collection error:', error);
+    logger.error('Delete collection error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -260,7 +261,7 @@ export const reorderCollections = async (req: AuthRequest, res: Response): Promi
       message: 'Collections reordered successfully'
     });
   } catch (error) {
-    console.error('Reorder collections error:', error);
+    logger.error('Reorder collections error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -314,7 +315,7 @@ export const addProductToCollection = async (req: AuthRequest, res: Response): P
       message: 'Product added to collection successfully'
     });
   } catch (error) {
-    console.error('Add product to collection error:', error);
+    logger.error('Add product to collection error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -359,7 +360,7 @@ export const removeProductFromCollection = async (req: AuthRequest, res: Respons
       message: 'Product removed from collection successfully'
     });
   } catch (error) {
-    console.error('Remove product from collection error:', error);
+    logger.error('Remove product from collection error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

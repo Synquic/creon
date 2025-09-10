@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { User } from '../models';
+import { logger } from '../index';
 
 export const uploadImage = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -26,7 +27,7 @@ export const uploadImage = async (req: AuthRequest, res: Response): Promise<void
       }
     });
   } catch (error) {
-    console.error('Upload image error:', error);
+    logger.error('Upload image error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -78,7 +79,7 @@ export const uploadProfileImage = async (req: AuthRequest, res: Response): Promi
       }
     });
   } catch (error) {
-    console.error('Upload profile image error:', error);
+    logger.error('Upload profile image error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

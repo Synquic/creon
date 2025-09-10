@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { UserRole } from '../middleware/rbac';
+import { logger } from '../index';
 
 export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -12,7 +13,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void
       data: { users }
     });
   } catch (error) {
-    console.error('Get all users error:', error);
+    logger.error('Get all users error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -78,7 +79,7 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
     });
 
   } catch (error) {
-    console.error('Update user role error:', error);
+    logger.error('Update user role error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -106,7 +107,7 @@ export const getUsersByRole = async (req: AuthRequest, res: Response): Promise<v
       data: { users, role }
     });
   } catch (error) {
-    console.error('Get users by role error:', error);
+    logger.error('Get users by role error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -138,7 +139,7 @@ export const getRoleStats = async (req: AuthRequest, res: Response): Promise<voi
       }
     });
   } catch (error) {
-    console.error('Get role stats error:', error);
+    logger.error('Get role stats error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -187,7 +188,7 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
     });
 
   } catch (error) {
-    console.error('Delete user error:', error);
+    logger.error('Delete user error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

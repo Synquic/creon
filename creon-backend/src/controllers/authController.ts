@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { User, Session } from '../models';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/auth';
+import { logger } from '../index';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -67,7 +68,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('Registration error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -132,7 +133,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -193,7 +194,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
       }
     });
   } catch (error) {
-    console.error('Token refresh error:', error);
+    logger.error('Token refresh error:', error);
     res.status(401).json({
       success: false,
       message: 'Invalid refresh token'
@@ -217,7 +218,7 @@ export const logout = async (req: AuthRequest, res: Response): Promise<void> => 
       message: 'Logged out successfully'
     });
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error('Logout error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -236,7 +237,7 @@ export const logoutAll = async (req: AuthRequest, res: Response): Promise<void> 
       message: 'Logged out from all devices successfully'
     });
   } catch (error) {
-    console.error('Logout all error:', error);
+    logger.error('Logout all error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -284,7 +285,7 @@ export const checkUsernameAvailability = async (req: Request, res: Response): Pr
       }
     });
   } catch (error) {
-    console.error('Check username availability error:', error);
+    logger.error('Check username availability error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -331,7 +332,7 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
       }
     });
   } catch (error) {
-    console.error('Get profile error:', error);
+    logger.error('Get profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

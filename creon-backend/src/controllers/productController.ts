@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Product, ProductCollection, Analytics } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { generateUniqueShortCode, isValidShortCode } from '../utils/shortCode';
+import { logger } from '../index';
 
 const checkProductShortCodeUnique = async (code: string): Promise<boolean> => {
   const existing = await Product.findOne({ shortCode: code });
@@ -87,7 +88,7 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
       data: { product }
     });
   } catch (error) {
-    console.error('Create product error:', error);
+    logger.error('Create product error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -147,7 +148,7 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
       }
     });
   } catch (error) {
-    console.error('Get products error:', error);
+    logger.error('Get products error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -176,7 +177,7 @@ export const getProductById = async (req: AuthRequest, res: Response): Promise<v
       data: { product }
     });
   } catch (error) {
-    console.error('Get product by ID error:', error);
+    logger.error('Get product by ID error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -267,7 +268,7 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
       data: { product }
     });
   } catch (error) {
-    console.error('Update product error:', error);
+    logger.error('Update product error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -302,7 +303,7 @@ export const deleteProduct = async (req: AuthRequest, res: Response): Promise<vo
       message: 'Product deleted successfully'
     });
   } catch (error) {
-    console.error('Delete product error:', error);
+    logger.error('Delete product error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -342,7 +343,7 @@ export const redirectProduct = async (req: Request, res: Response): Promise<void
 
     res.redirect(301, product.affiliateUrl);
   } catch (error) {
-    console.error('Redirect product error:', error);
+    logger.error('Redirect product error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -398,7 +399,7 @@ export const getProductAnalytics = async (req: AuthRequest, res: Response): Prom
       }
     });
   } catch (error) {
-    console.error('Get product analytics error:', error);
+    logger.error('Get product analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

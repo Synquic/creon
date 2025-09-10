@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Link, Analytics } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { generateUniqueShortCode, isValidShortCode } from '../utils/shortCode';
+import { logger } from '../index';
 
 const checkShortCodeUnique = async (code: string): Promise<boolean> => {
   const existing = await Link.findOne({ shortCode: code });
@@ -10,7 +11,7 @@ const checkShortCodeUnique = async (code: string): Promise<boolean> => {
 
 export const createLink = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    console.log('🎯 CREATE LINK REQUEST:', {
+    logger.info('🎯 CREATE LINK REQUEST:', {
       body: req.body,
       userId: req.user?.id,
       headers: {
@@ -65,7 +66,7 @@ export const createLink = async (req: AuthRequest, res: Response): Promise<void>
       data: { link }
     });
   } catch (error) {
-    console.error('Create link error:', error);
+    logger.error('Create link error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -106,7 +107,7 @@ export const getLinks = async (req: AuthRequest, res: Response): Promise<void> =
       }
     });
   } catch (error) {
-    console.error('Get links error:', error);
+    logger.error('Get links error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -134,7 +135,7 @@ export const getLinkById = async (req: AuthRequest, res: Response): Promise<void
       data: { link }
     });
   } catch (error) {
-    console.error('Get link by ID error:', error);
+    logger.error('Get link by ID error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -191,7 +192,7 @@ export const updateLink = async (req: AuthRequest, res: Response): Promise<void>
       data: { link }
     });
   } catch (error) {
-    console.error('Update link error:', error);
+    logger.error('Update link error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -219,7 +220,7 @@ export const deleteLink = async (req: AuthRequest, res: Response): Promise<void>
       message: 'Link deleted successfully'
     });
   } catch (error) {
-    console.error('Delete link error:', error);
+    logger.error('Delete link error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -254,7 +255,7 @@ export const reorderLinks = async (req: AuthRequest, res: Response): Promise<voi
       message: 'Links reordered successfully'
     });
   } catch (error) {
-    console.error('Reorder links error:', error);
+    logger.error('Reorder links error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -294,7 +295,7 @@ export const redirectLink = async (req: Request, res: Response): Promise<void> =
 
     res.redirect(301, link.url);
   } catch (error) {
-    console.error('Redirect link error:', error);
+    logger.error('Redirect link error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -350,7 +351,7 @@ export const getLinkAnalytics = async (req: AuthRequest, res: Response): Promise
       }
     });
   } catch (error) {
-    console.error('Get link analytics error:', error);
+    logger.error('Get link analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

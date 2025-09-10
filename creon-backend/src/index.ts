@@ -21,7 +21,8 @@ import roleRoutes from './routes/roles';
 import analyticsRoutes from './routes/analytics';
 import shopSettingsRoutes from './routes/shopSettings';
 import dataParsingRoutes from './routes/dataParsing';
-
+import winston from 'winston';
+import LokiTransport from 'winston-loki';
 dotenv.config();
 
 const app = express();
@@ -58,6 +59,20 @@ app.use('/api/shop', shopSettingsRoutes);
 app.use('/api/data-parsing', dataParsingRoutes);
 app.use('/', redirectRoutes);
 
+export const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+        new LokiTransport({
+          labels: { app: 'creon-backend' },
+          host:process.env.LOKI_URL || ""
+        }),
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'logs/combined.log' }),
+    ],
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
@@ -74,7 +89,7 @@ app.use((req, res) => {
 });
 
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Global error handler:', error);
+  logger.error('Global error handler:', error);
   res.status(error.status || 500).json({
     success: false,
     message: error.message || 'Internal server error'
@@ -82,7 +97,7 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Creon API server is running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN || 'http://localhost:5174'}`);
+  logger.info(`Creon API server started on port ${PORT}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`CORS Origin: ${process.env.CORS_ORIGIN || 'http://localhost:5174'}`);
 });

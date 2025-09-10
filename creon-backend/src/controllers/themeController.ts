@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Theme } from '../models/Theme';
 import { AuthRequest } from '../middleware/auth';
+import { logger } from '../index';
 
 export const getUserTheme = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -19,7 +20,7 @@ export const getUserTheme = async (req: AuthRequest, res: Response): Promise<voi
     });
 
   } catch (error) {
-    console.error('Get user theme error:', error);
+    logger.error('Get user theme error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -62,7 +63,7 @@ export const updateTheme = async (req: AuthRequest, res: Response): Promise<void
     });
 
   } catch (error) {
-    console.error('Update theme error:', error);
+    logger.error('Update theme error:', error);
     
     if ((error as any).name === 'ValidationError') {
       res.status(400).json({
@@ -118,7 +119,7 @@ export const getPublicTheme = async (req: Request, res: Response): Promise<void>
     });
 
   } catch (error) {
-    console.error('Get public theme error:', error);
+    logger.error('Get public theme error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -143,7 +144,7 @@ export const resetTheme = async (req: AuthRequest, res: Response): Promise<void>
     });
 
   } catch (error) {
-    console.error('Reset theme error:', error);
+    logger.error('Reset theme error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

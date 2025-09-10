@@ -3,6 +3,7 @@ import { Analytics } from '../models/Analytics';
 import { AuthRequest } from '../middleware/auth';
 import { Product } from '../models/Product';
 import { Link } from '../models/Link';
+import { logger } from '../index';
 
 // Track analytics event
 export const trackEvent = async (req: Request, res: Response): Promise<void> => {
@@ -70,7 +71,7 @@ export const trackEvent = async (req: Request, res: Response): Promise<void> => 
     });
 
   } catch (error) {
-    console.error('Track analytics error:', error);
+    logger.error('Track analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -301,7 +302,7 @@ export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Pr
     });
 
   } catch (error) {
-    console.error('Get dashboard analytics error:', error);
+    logger.error('Get dashboard analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -389,7 +390,7 @@ export const getLinkAnalytics = async (req: AuthRequest, res: Response): Promise
     });
 
   } catch (error) {
-    console.error('Get link analytics error:', error);
+    logger.error('Get link analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -479,7 +480,7 @@ export const getProductAnalytics = async (req: AuthRequest, res: Response): Prom
     });
 
   } catch (error) {
-    console.error('Get product analytics error:', error);
+    logger.error('Get product analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
