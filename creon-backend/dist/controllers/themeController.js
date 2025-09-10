@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetTheme = exports.getPublicTheme = exports.updateTheme = exports.getUserTheme = void 0;
 const Theme_1 = require("../models/Theme");
+const index_1 = require("../index");
 const getUserTheme = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -15,7 +16,7 @@ const getUserTheme = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get user theme error:', error);
+        index_1.logger.error('Get user theme error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -49,7 +50,7 @@ const updateTheme = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Update theme error:', error);
+        index_1.logger.error('Update theme error:', error);
         if (error.name === 'ValidationError') {
             res.status(400).json({
                 success: false,
@@ -99,7 +100,7 @@ const getPublicTheme = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get public theme error:', error);
+        index_1.logger.error('Get public theme error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -119,7 +120,7 @@ const resetTheme = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Reset theme error:', error);
+        index_1.logger.error('Reset theme error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

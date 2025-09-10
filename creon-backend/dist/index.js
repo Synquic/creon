@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.logger = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -25,6 +26,8 @@ const roles_1 = __importDefault(require("./routes/roles"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
 const shopSettings_1 = __importDefault(require("./routes/shopSettings"));
 const dataParsing_1 = __importDefault(require("./routes/dataParsing"));
+const winston_1 = __importDefault(require("winston"));
+const winston_loki_1 = __importDefault(require("winston-loki"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -52,6 +55,19 @@ app.use('/api/analytics', analytics_1.default);
 app.use('/api/shop', shopSettings_1.default);
 app.use('/api/data-parsing', dataParsing_1.default);
 app.use('/', redirect_1.default);
+exports.logger = winston_1.default.createLogger({
+    level: 'info',
+    format: winston_1.default.format.json(),
+    transports: [
+        new winston_loki_1.default({
+            labels: { app: 'creon-backend' },
+            host: process.env.LOKI_URL || ""
+        }),
+        new winston_1.default.transports.Console(),
+        new winston_1.default.transports.File({ filename: 'logs/error.log', level: 'error' }),
+        new winston_1.default.transports.File({ filename: 'logs/combined.log' }),
+    ],
+});
 app.get('/api/health', (req, res) => {
     res.json({
         success: true,
@@ -66,15 +82,15 @@ app.use((req, res) => {
     });
 });
 app.use((error, req, res, next) => {
-    console.error('Global error handler:', error);
+    exports.logger.error('Global error handler:', error);
     res.status(error.status || 500).json({
         success: false,
         message: error.message || 'Internal server error'
     });
 });
 app.listen(PORT, () => {
-    console.log(`🚀 Creon API server is running on port ${PORT}`);
-    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN || 'http://localhost:5174'}`);
+    exports.logger.info(`Creon API server started on port ${PORT}`);
+    exports.logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    exports.logger.info(`CORS Origin: ${process.env.CORS_ORIGIN || 'http://localhost:5174'}`);
 });
 //# sourceMappingURL=index.js.map

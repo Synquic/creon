@@ -3,13 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getLinkAnalytics = exports.redirectLink = exports.reorderLinks = exports.deleteLink = exports.updateLink = exports.getLinkById = exports.getLinks = exports.createLink = void 0;
 const models_1 = require("../models");
 const shortCode_1 = require("../utils/shortCode");
+const index_1 = require("../index");
 const checkShortCodeUnique = async (code) => {
     const existing = await models_1.Link.findOne({ shortCode: code });
     return !existing;
 };
 const createLink = async (req, res) => {
     try {
-        console.log('🎯 CREATE LINK REQUEST:', {
+        index_1.logger.info('🎯 CREATE LINK REQUEST:', {
             body: req.body,
             userId: req.user?.id,
             headers: {
@@ -59,7 +60,7 @@ const createLink = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Create link error:', error);
+        index_1.logger.error('Create link error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -97,7 +98,7 @@ const getLinks = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get links error:', error);
+        index_1.logger.error('Get links error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -123,7 +124,7 @@ const getLinkById = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get link by ID error:', error);
+        index_1.logger.error('Get link by ID error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -169,7 +170,7 @@ const updateLink = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Update link error:', error);
+        index_1.logger.error('Update link error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -195,7 +196,7 @@ const deleteLink = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Delete link error:', error);
+        index_1.logger.error('Delete link error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -222,7 +223,7 @@ const reorderLinks = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Reorder links error:', error);
+        index_1.logger.error('Reorder links error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -258,7 +259,7 @@ const redirectLink = async (req, res) => {
         res.redirect(301, link.url);
     }
     catch (error) {
-        console.error('Redirect link error:', error);
+        index_1.logger.error('Redirect link error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -309,7 +310,7 @@ const getLinkAnalytics = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get link analytics error:', error);
+        index_1.logger.error('Get link analytics error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

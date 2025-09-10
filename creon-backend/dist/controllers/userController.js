@@ -7,6 +7,7 @@ exports.getDashboardStats = exports.checkUsernameAvailability = exports.getUserP
 const models_1 = require("../models");
 const Theme_1 = require("../models/Theme");
 const ShopSettings_1 = __importDefault(require("../models/ShopSettings"));
+const index_1 = require("../index");
 const updateProfile = async (req, res) => {
     try {
         const { firstName, lastName, bio, socialLinks, theme } = req.body;
@@ -48,7 +49,7 @@ const updateProfile = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Update profile error:', error);
+        index_1.logger.error('Update profile error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -83,7 +84,7 @@ const changePassword = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Change password error:', error);
+        index_1.logger.error('Change password error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -148,7 +149,7 @@ const getUserProfile = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get user profile error:', error);
+        index_1.logger.error('Get user profile error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -168,7 +169,7 @@ const checkUsernameAvailability = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Check username availability error:', error);
+        index_1.logger.error('Check username availability error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -222,7 +223,7 @@ const getDashboardStats = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get dashboard stats error:', error);
+        index_1.logger.error('Get dashboard stats error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getProfile = exports.checkUsernameAvailability = exports.logoutAll = exports.logout = exports.refreshToken = exports.login = exports.register = void 0;
 const models_1 = require("../models");
 const jwt_1 = require("../utils/jwt");
+const index_1 = require("../index");
 const register = async (req, res) => {
     try {
         const { username, email, password, firstName, lastName } = req.body;
@@ -60,7 +61,7 @@ const register = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Registration error:', error);
+        index_1.logger.error('Registration error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -120,7 +121,7 @@ const login = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Login error:', error);
+        index_1.logger.error('Login error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -174,7 +175,7 @@ const refreshToken = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Token refresh error:', error);
+        index_1.logger.error('Token refresh error:', error);
         res.status(401).json({
             success: false,
             message: 'Invalid refresh token'
@@ -197,7 +198,7 @@ const logout = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Logout error:', error);
+        index_1.logger.error('Logout error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -216,7 +217,7 @@ const logoutAll = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Logout all error:', error);
+        index_1.logger.error('Logout all error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -259,7 +260,7 @@ const checkUsernameAvailability = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Check username availability error:', error);
+        index_1.logger.error('Check username availability error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -303,7 +304,7 @@ const getProfile = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get profile error:', error);
+        index_1.logger.error('Get profile error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

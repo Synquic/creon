@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.getRoleStats = exports.getUsersByRole = exports.updateUserRole = exports.getAllUsers = void 0;
 const User_1 = require("../models/User");
+const index_1 = require("../index");
 const getAllUsers = async (req, res) => {
     try {
         const users = await User_1.User.find({}, '-password').sort({ createdAt: -1 });
@@ -11,7 +12,7 @@ const getAllUsers = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get all users error:', error);
+        index_1.logger.error('Get all users error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -62,7 +63,7 @@ const updateUserRole = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Update user role error:', error);
+        index_1.logger.error('Update user role error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -88,7 +89,7 @@ const getUsersByRole = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get users by role error:', error);
+        index_1.logger.error('Get users by role error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -119,7 +120,7 @@ const getRoleStats = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get role stats error:', error);
+        index_1.logger.error('Get role stats error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -160,7 +161,7 @@ const deleteUser = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Delete user error:', error);
+        index_1.logger.error('Delete user error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

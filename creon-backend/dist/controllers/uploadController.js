@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadProfileImage = exports.uploadImage = void 0;
 const models_1 = require("../models");
+const index_1 = require("../index");
 const uploadImage = async (req, res) => {
     try {
         if (!req.file) {
@@ -25,7 +26,7 @@ const uploadImage = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Upload image error:', error);
+        index_1.logger.error('Upload image error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -70,7 +71,7 @@ const uploadProfileImage = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Upload profile image error:', error);
+        index_1.logger.error('Upload profile image error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

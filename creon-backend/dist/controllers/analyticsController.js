@@ -4,6 +4,7 @@ exports.getProductAnalytics = exports.getLinkAnalytics = exports.getDashboardAna
 const Analytics_1 = require("../models/Analytics");
 const Product_1 = require("../models/Product");
 const Link_1 = require("../models/Link");
+const index_1 = require("../index");
 const trackEvent = async (req, res) => {
     try {
         const { type, linkId, productId, collectionId } = req.body;
@@ -54,7 +55,7 @@ const trackEvent = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Track analytics error:', error);
+        index_1.logger.error('Track analytics error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -270,7 +271,7 @@ const getDashboardAnalytics = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get dashboard analytics error:', error);
+        index_1.logger.error('Get dashboard analytics error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -351,7 +352,7 @@ const getLinkAnalytics = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get link analytics error:', error);
+        index_1.logger.error('Get link analytics error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -434,7 +435,7 @@ const getProductAnalytics = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get product analytics error:', error);
+        index_1.logger.error('Get product analytics error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

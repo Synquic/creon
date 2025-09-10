@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchMetadata = void 0;
 const urlMetadata_1 = require("../services/urlMetadata");
+const index_1 = require("../index");
 const fetchMetadata = async (req, res) => {
     try {
         const { url } = req.body;
@@ -35,7 +36,7 @@ const fetchMetadata = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Fetch metadata error:', error);
+        index_1.logger.error('Fetch metadata error:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch metadata'

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.removeProductFromCollection = exports.addProductToCollection = exports.reorderCollections = exports.deleteCollection = exports.updateCollection = exports.getCollectionById = exports.getCollections = exports.createCollection = void 0;
 const models_1 = require("../models");
+const index_1 = require("../index");
 const createCollection = async (req, res) => {
     try {
         const { title, description, image, products = [] } = req.body;
@@ -39,7 +40,7 @@ const createCollection = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Create collection error:', error);
+        index_1.logger.error('Create collection error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -78,7 +79,7 @@ const getCollections = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get collections error:', error);
+        index_1.logger.error('Get collections error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -105,7 +106,7 @@ const getCollectionById = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Get collection by ID error:', error);
+        index_1.logger.error('Get collection by ID error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -160,7 +161,7 @@ const updateCollection = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Update collection error:', error);
+        index_1.logger.error('Update collection error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -187,7 +188,7 @@ const deleteCollection = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Delete collection error:', error);
+        index_1.logger.error('Delete collection error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -214,7 +215,7 @@ const reorderCollections = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Reorder collections error:', error);
+        index_1.logger.error('Reorder collections error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -262,7 +263,7 @@ const addProductToCollection = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Add product to collection error:', error);
+        index_1.logger.error('Add product to collection error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'
@@ -302,7 +303,7 @@ const removeProductFromCollection = async (req, res) => {
         });
     }
     catch (error) {
-        console.error('Remove product from collection error:', error);
+        index_1.logger.error('Remove product from collection error:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error'

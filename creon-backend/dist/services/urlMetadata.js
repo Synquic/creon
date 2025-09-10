@@ -39,9 +39,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchYouTubeMetadata = exports.fetchURLMetadata = void 0;
 const axios_1 = __importDefault(require("axios"));
 const cheerio = __importStar(require("cheerio"));
+const index_1 = require("../index");
 const fetchURLMetadata = async (url) => {
     try {
-        console.log('🔍 Fetching metadata for URL:', url);
+        index_1.logger.info('🔍 Fetching metadata for URL:', url);
         const response = await axios_1.default.get(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -65,11 +66,11 @@ const fetchURLMetadata = async (url) => {
             siteName: extractSiteName($),
             type: extractType($)
         };
-        console.log('✅ Metadata extracted:', metadata);
+        index_1.logger.info('✅ Metadata extracted:', metadata);
         return metadata;
     }
     catch (error) {
-        console.error('❌ Error fetching metadata:', error);
+        index_1.logger.error('❌ Error fetching metadata:', error);
         return {
             url,
             title: extractDomainName(url),
@@ -192,7 +193,7 @@ const fetchYouTubeMetadata = async (url) => {
         };
     }
     catch (error) {
-        console.error('Error fetching YouTube metadata:', error);
+        index_1.logger.error('Error fetching YouTube metadata:', error);
         return (0, exports.fetchURLMetadata)(url);
     }
 };
