@@ -48,18 +48,25 @@ export const fetchResponse = async (req: AuthRequest, res: Response): Promise<vo
 
     // Use cheerio to extract the <body> HTML
     const $ = cheerio.load(html);
+    const title = $('body').text() || 'No title found';
     const mainContent = $('body').html() || html;
-    // Optionally log the main content length
-    logger.info('Main content length:', mainContent.length);
     // Divide main content into 4 parts, send 2nd and 3rd parts only
     const partLength = Math.ceil(mainContent.length / 4);
     const mainContentPart = mainContent.slice(partLength, partLength * 3);
-    logger.info ('Sending part length:', mainContentPart.length);
+    const secondPart = mainContent.slice(partLength, partLength * 2); // 2nd part only
+    
+    // Print content of a div with id="app"
+    const appContent = $('#app').html() || 'No #app div found';
+    console.info('Content of #app:', appContent);
+    
+    const finalContent = secondPart + appContent;
+    
+    logger.info ('Sending part length:', finalContent.length);
 
 
         // Compose a strict system and user prompt for the LLM
         const systemMessage = `You are a web extraction agent. Given the HTML of a product page, extract and return ONLY a valid JSON object with the following fields: productTitle, productImage, price, currency (in this format USD, INR, EUR, GBP, CAD, AUD), productCode(for url like garnier-face-serum max 15 characters, should be words separated by -) and productDescription (you create a short description). Do NOT provide any explanation, markdown, or apology. If you cannot extract the data, return an empty JSON object: {}.`;
-        const userMessage = `Extract product data from the following HTML.\n\nHTML:\n${mainContentPart}\n\nReturn ONLY a JSON object with these fields: productTitle, productImage, price, currency, productCode and productDescription.`;
+        const userMessage = `Extract product data from the following HTML.\n\nHTML:\n${finalContent}\n\nReturn ONLY a JSON object with these fields: productTitle, productImage, price, currency, productCode and productDescription.`;
 
         const completion = await client.chat.completions.create({
             model: 'o4-mini',
