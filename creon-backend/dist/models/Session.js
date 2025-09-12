@@ -38,31 +38,29 @@ const mongoose_1 = __importStar(require("mongoose"));
 const sessionSchema = new mongoose_1.Schema({
     userId: {
         type: String,
-        required: [true, 'User ID is required'],
-        ref: 'User'
+        required: [true, "User ID is required"],
+        ref: "User",
     },
     token: {
         type: String,
-        required: [true, 'Token is required'],
-        unique: true
+        required: [true, "Token is required"],
+        unique: true,
     },
     deviceInfo: {
         type: String,
-        default: null
+        default: null,
     },
     ipAddress: {
         type: String,
-        required: [true, 'IP address is required']
+        required: [true, "IP address is required"],
     },
     expiresAt: {
         type: Date,
-        required: [true, 'Expiry date is required']
-    }
+        required: [true, "Expiry date is required"],
+    },
 }, {
-    timestamps: true
+    timestamps: true,
 });
-sessionSchema.index({ userId: 1 });
-sessionSchema.index({ token: 1 });
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-exports.Session = mongoose_1.default.model('Session', sessionSchema);
+exports.Session = mongoose_1.default.model("Session", sessionSchema);
 //# sourceMappingURL=Session.js.map

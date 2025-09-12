@@ -110,6 +110,5 @@ const themeSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-themeSchema.index({ userId: 1 });
 exports.Theme = (0, mongoose_1.model)('Theme', themeSchema);
 //# sourceMappingURL=Theme.js.map

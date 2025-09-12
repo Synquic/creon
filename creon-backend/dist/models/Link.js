@@ -99,8 +99,7 @@ const linkSchema = new mongoose_1.Schema({
 linkSchema.virtual('shortUrl').get(function () {
     return `/s/${this.shortCode}`;
 });
-linkSchema.index({ userId: 1, order: 1 });
-linkSchema.index({ shortCode: 1 });
-linkSchema.index({ userId: 1, isActive: 1 });
+linkSchema.index({ order: 1 });
+linkSchema.index({ isActive: 1 });
 exports.Link = mongoose_1.default.model('Link', linkSchema);
 //# sourceMappingURL=Link.js.map

@@ -10,22 +10,22 @@ const checkShortCodeUnique = async (code) => {
 };
 const createLink = async (req, res) => {
     try {
-        index_1.logger.info('🎯 CREATE LINK REQUEST:', {
+        index_1.logger.info("🎯 CREATE LINK REQUEST:", {
             body: req.body,
             userId: req.user?.id,
             headers: {
-                authorization: req.headers.authorization ? '✅ Present' : '❌ Missing',
-                contentType: req.headers['content-type']
-            }
+                authorization: req.headers.authorization ? "✅ Present" : "❌ Missing",
+                contentType: req.headers["content-type"],
+            },
         });
-        const { title, url, shortCode, description, image, type = 'link' } = req.body;
+        const { title, url, shortCode, description, image, type = "link", } = req.body;
         const userId = req.user?.id;
         let finalShortCode = shortCode;
         if (shortCode) {
             if (!(0, shortCode_1.isValidShortCode)(shortCode)) {
                 res.status(400).json({
                     success: false,
-                    message: 'Invalid short code format'
+                    message: "Invalid short code format",
                 });
                 return;
             }
@@ -33,7 +33,7 @@ const createLink = async (req, res) => {
             if (!isUnique) {
                 res.status(400).json({
                     success: false,
-                    message: 'Short code is already taken'
+                    message: "Short code is already taken",
                 });
                 return;
             }
@@ -51,38 +51,36 @@ const createLink = async (req, res) => {
             description,
             image,
             type,
-            order
+            order,
         });
         res.status(201).json({
             success: true,
-            message: 'Link created successfully',
-            data: { link }
+            message: "Link created successfully",
+            data: { link },
         });
     }
     catch (error) {
-        index_1.logger.error('Create link error:', error);
+        index_1.logger.error("Create link error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
 exports.createLink = createLink;
 const getLinks = async (req, res) => {
     try {
+        index_1.logger.info("Get links called", { query: req.query });
         const userId = req.user?.id;
-        const { page = 1, limit = 20, sortBy = 'order', sortOrder = 'asc' } = req.query;
+        const { page = 1, limit = 20, sortBy = "order", sortOrder = "asc", } = req.query;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
         const skip = (pageNum - 1) * limitNum;
-        const sortDirection = sortOrder === 'desc' ? -1 : 1;
+        const sortDirection = sortOrder === "desc" ? -1 : 1;
         const sortOptions = { [sortBy]: sortDirection };
         const [links, total] = await Promise.all([
-            models_1.Link.find({ userId })
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(limitNum),
-            models_1.Link.countDocuments({ userId })
+            models_1.Link.find({ userId }).sort(sortOptions).skip(skip).limit(limitNum),
+            models_1.Link.countDocuments({ userId }),
         ]);
         res.json({
             success: true,
@@ -92,16 +90,16 @@ const getLinks = async (req, res) => {
                     page: pageNum,
                     limit: limitNum,
                     total,
-                    pages: Math.ceil(total / limitNum)
-                }
-            }
+                    pages: Math.ceil(total / limitNum),
+                },
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get links error:', error);
+        index_1.logger.error("Get links error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -114,20 +112,20 @@ const getLinkById = async (req, res) => {
         if (!link) {
             res.status(404).json({
                 success: false,
-                message: 'Link not found'
+                message: "Link not found",
             });
             return;
         }
         res.json({
             success: true,
-            data: { link }
+            data: { link },
         });
     }
     catch (error) {
-        index_1.logger.error('Get link by ID error:', error);
+        index_1.logger.error("Get link by ID error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -144,36 +142,39 @@ const updateLink = async (req, res) => {
         if (shortCode) {
             const existingLink = await models_1.Link.findOne({
                 shortCode,
-                _id: { $ne: id }
+                _id: { $ne: id },
             });
             if (existingLink) {
                 res.status(400).json({
                     success: false,
-                    message: 'Short code is already taken'
+                    message: "Short code is already taken",
                 });
                 return;
             }
             updateData.shortCode = shortCode;
         }
-        const link = await models_1.Link.findOneAndUpdate({ _id: id, userId }, updateData, { new: true, runValidators: true });
+        const link = await models_1.Link.findOneAndUpdate({ _id: id, userId }, updateData, {
+            new: true,
+            runValidators: true,
+        });
         if (!link) {
             res.status(404).json({
                 success: false,
-                message: 'Link not found'
+                message: "Link not found",
             });
             return;
         }
         res.json({
             success: true,
-            message: 'Link updated successfully',
-            data: { link }
+            message: "Link updated successfully",
+            data: { link },
         });
     }
     catch (error) {
-        index_1.logger.error('Update link error:', error);
+        index_1.logger.error("Update link error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -186,48 +187,43 @@ const deleteLink = async (req, res) => {
         if (!link) {
             res.status(404).json({
                 success: false,
-                message: 'Link not found'
+                message: "Link not found",
             });
             return;
         }
         res.json({
             success: true,
-            message: 'Link deleted successfully'
+            message: "Link deleted successfully",
         });
     }
     catch (error) {
-        index_1.logger.error('Delete link error:', error);
+        index_1.logger.error("Delete link error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
 exports.deleteLink = deleteLink;
 const reorderLinks = async (req, res) => {
     try {
-        const { linkOrders } = req.body;
-        const userId = req.user?.id;
+        console.log("Reorder links called", { body: req.body });
+        const linkOrders = req.body.linkOrders;
         if (!Array.isArray(linkOrders)) {
-            res.status(400).json({
-                success: false,
-                message: 'linkOrders must be an array'
-            });
-            return;
+            return res.status(400).json({ message: 'Invalid input format' });
         }
-        const updatePromises = linkOrders.map(({ id, order }) => models_1.Link.updateOne({ _id: id, userId }, { order }));
-        await Promise.all(updatePromises);
-        res.json({
-            success: true,
-            message: 'Links reordered successfully'
-        });
+        const bulkOps = linkOrders.map(({ id, order }) => ({
+            updateOne: {
+                filter: { _id: id },
+                update: { $set: { order } },
+            },
+        }));
+        const result = await models_1.Link.bulkWrite(bulkOps);
+        return res.status(200).json({ message: 'Links reordered successfully', result });
     }
     catch (error) {
-        index_1.logger.error('Reorder links error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error'
-        });
+        console.error('Error reordering links:', error);
+        return res.status(500).json({ message: 'Server error' });
     }
 };
 exports.reorderLinks = reorderLinks;
@@ -236,12 +232,12 @@ const redirectLink = async (req, res) => {
         const { shortCode } = req.params;
         const link = await models_1.Link.findOne({
             shortCode,
-            isActive: true
+            isActive: true,
         });
         if (!link) {
             res.status(404).json({
                 success: false,
-                message: 'Link not found'
+                message: "Link not found",
             });
             return;
         }
@@ -250,19 +246,19 @@ const redirectLink = async (req, res) => {
         await models_1.Analytics.create({
             userId: link.userId,
             linkId: link._id.toString(),
-            type: 'link_click',
+            type: "link_click",
             ipAddress: req.ip,
-            userAgent: req.get('User-Agent') || 'unknown',
-            referer: req.get('Referer'),
-            timestamp: new Date()
+            userAgent: req.get("User-Agent") || "unknown",
+            referer: req.get("Referer"),
+            timestamp: new Date(),
         });
         res.redirect(301, link.url);
     }
     catch (error) {
-        index_1.logger.error('Redirect link error:', error);
+        index_1.logger.error("Redirect link error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -271,24 +267,24 @@ const getLinkAnalytics = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user?.id;
-        const { period = '7d' } = req.query;
+        const { period = "7d" } = req.query;
         const link = await models_1.Link.findOne({ _id: id, userId });
         if (!link) {
             res.status(404).json({
                 success: false,
-                message: 'Link not found'
+                message: "Link not found",
             });
             return;
         }
-        const days = period === '30d' ? 30 : period === '7d' ? 7 : 1;
+        const days = period === "30d" ? 30 : period === "7d" ? 7 : 1;
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
         const analytics = await models_1.Analytics.find({
             linkId: id,
-            timestamp: { $gte: startDate }
+            timestamp: { $gte: startDate },
         }).sort({ timestamp: -1 });
         const dailyClicks = analytics.reduce((acc, click) => {
-            const date = click.timestamp.toISOString().split('T')[0];
+            const date = click.timestamp.toISOString().split("T")[0];
             acc[date] = (acc[date] || 0) + 1;
             return acc;
         }, {});
@@ -299,21 +295,21 @@ const getLinkAnalytics = async (req, res) => {
                     id: link._id,
                     title: link.title,
                     shortCode: link.shortCode,
-                    totalClicks: link.clickCount
+                    totalClicks: link.clickCount,
                 },
                 analytics: {
                     totalClicks: analytics.length,
                     dailyClicks,
-                    recentClicks: analytics.slice(0, 50)
-                }
-            }
+                    recentClicks: analytics.slice(0, 50),
+                },
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get link analytics error:', error);
+        index_1.logger.error("Get link analytics error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };

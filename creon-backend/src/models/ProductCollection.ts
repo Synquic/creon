@@ -45,7 +45,7 @@ productCollectionSchema.virtual('productCount').get(function() {
   return this.products?.length || 0;
 });
 
-productCollectionSchema.index({ userId: 1, order: 1 });
-productCollectionSchema.index({ userId: 1, isActive: 1 });
+productCollectionSchema.index({ order: 1 });
+productCollectionSchema.index({ isActive: 1 });
 
 export const ProductCollection = mongoose.model<IProductCollection>('ProductCollection', productCollectionSchema);

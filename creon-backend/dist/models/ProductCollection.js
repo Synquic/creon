@@ -77,7 +77,7 @@ const productCollectionSchema = new mongoose_1.Schema({
 productCollectionSchema.virtual('productCount').get(function () {
     return this.products?.length || 0;
 });
-productCollectionSchema.index({ userId: 1, order: 1 });
-productCollectionSchema.index({ userId: 1, isActive: 1 });
+productCollectionSchema.index({ order: 1 });
+productCollectionSchema.index({ isActive: 1 });
 exports.ProductCollection = mongoose_1.default.model('ProductCollection', productCollectionSchema);
 //# sourceMappingURL=ProductCollection.js.map

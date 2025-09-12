@@ -168,7 +168,4 @@ const themeSchema = new Schema<ThemeDocument>(
   }
 );
 
-// Index for faster queries
-themeSchema.index({ userId: 1 });
-
 export const Theme = model<ThemeDocument>('Theme', themeSchema);

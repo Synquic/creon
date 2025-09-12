@@ -8,7 +8,7 @@ export interface VideoInfo {
   embedUrl?: string;
 }
 
-/**
+/** 
  * Extract YouTube video ID from various YouTube URL formats
  */
 export const getYouTubeVideoId = (url: string): string | null => {

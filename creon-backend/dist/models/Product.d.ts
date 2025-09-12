@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { IProduct } from '../types';
+import mongoose from "mongoose";
+import { IProduct } from "../types";
 export declare const Product: mongoose.Model<IProduct, {}, {}, {}, mongoose.Document<unknown, {}, IProduct, {}, {}> & IProduct & Required<{
     _id: unknown;
 }> & {

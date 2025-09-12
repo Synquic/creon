@@ -40,7 +40,6 @@ const shopSettingsSchema = new Schema<IShopSettings>({
   timestamps: true
 });
 
-// Ensure only one shop settings per user
-shopSettingsSchema.index({ userId: 1 }, { unique: true });
+
 
 export default mongoose.model<IShopSettings>('ShopSettings', shopSettingsSchema);

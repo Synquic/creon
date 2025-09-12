@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   createLink,
   getLinks,
@@ -6,43 +6,38 @@ import {
   updateLink,
   deleteLink,
   reorderLinks,
-  getLinkAnalytics
-} from '../controllers/linkController';
-import { authenticate } from '../middleware/auth';
-import { createLimiter } from '../middleware/rateLimiting';
+  getLinkAnalytics,
+} from "../controllers/linkController";
+import { authenticate } from "../middleware/auth";
+import { createLimiter } from "../middleware/rateLimiting";
 import {
   linkValidation,
   paginationValidation,
-  handleValidationErrors
-} from '../middleware/validation';
+  handleValidationErrors,
+} from "../middleware/validation";
 
 const router = Router();
 
 router.use(authenticate);
 
-router.post('/',
+router.post(
+  "/",
   createLimiter,
   linkValidation,
   handleValidationErrors,
   createLink
 );
 
-router.get('/',
-  paginationValidation,
-  handleValidationErrors,
-  getLinks
-);
+router.get("/", paginationValidation, handleValidationErrors, getLinks);
 
-router.get('/:id', getLinkById);
+router.post("/reorder", reorderLinks);
 
-router.put('/:id', updateLink);
+router.get("/:id", getLinkById);
 
-router.delete('/:id', deleteLink);
+router.put("/:id", updateLink);
 
-router.put('/reorder',
-  reorderLinks
-);
+router.delete("/:id", deleteLink);
 
-router.get('/:id/analytics', getLinkAnalytics);
+router.get("/:id/analytics", getLinkAnalytics);
 
 export default router;
