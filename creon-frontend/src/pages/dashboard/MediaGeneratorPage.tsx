@@ -4,7 +4,6 @@ import {
   PhotoIcon, 
   EnvelopeIcon, 
   CheckCircleIcon,
-  ExclamationTriangleIcon,
   DocumentTextIcon,
   CursorArrowRaysIcon,
   UserIcon,
@@ -458,7 +457,7 @@ const MediaGeneratorPage: React.FC = () => {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-sm font-bold">2</span>
                   </div>
                   <div>
@@ -468,7 +467,7 @@ const MediaGeneratorPage: React.FC = () => {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-sm font-bold">3</span>
                   </div>
                   <div>
@@ -480,7 +479,7 @@ const MediaGeneratorPage: React.FC = () => {
             </div>
 
             {/* Features */}
-            <div className="bg-gradient-to-br from-purple-50 via-indigo-25 to-blue-50 rounded-3xl p-6 shadow-lg border border-purple-100/50 hover:shadow-xl transition-all duration-300">
+            <div className="bg-gradient-to-br from-green-50 via-green-25 to-emerald-50 rounded-3xl p-6 shadow-lg border border-green-100/50 hover:shadow-xl transition-all duration-300">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
                 What You'll Get
               </h3>
@@ -492,7 +491,7 @@ const MediaGeneratorPage: React.FC = () => {
                   'Professional design elements'
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center space-x-3">
-                    <CheckCircleIcon className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                    <CheckCircleIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
                     <span className="text-gray-700">{feature}</span>
                   </div>
                 ))}
