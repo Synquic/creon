@@ -20,6 +20,8 @@ import SocialLinksPage from './pages/dashboard/SocialLinksPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
 import RoleManagementPage from './pages/dashboard/RoleManagementPage';
 import ShopPage from './pages/dashboard/ShopPage';
+import InfluencerTrackerPage from './pages/dashboard/InfluencerTrackerPage';
+import MediaGeneratorPage from './pages/dashboard/MediaGeneratorPage';
 import ShortLinkRedirect from './pages/redirect/ShortLinkRedirect';
 
 const queryClient = new QueryClient({
@@ -113,6 +115,18 @@ function App() {
               <Route path="/dashboard/analytics/link/:linkId" element={
                 <ProtectedRoute>
                   <LinkAnalyticsPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/dashboard/influencer-tracker" element={
+                <ProtectedRoute>
+                  <InfluencerTrackerPage />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/dashboard/media-generator" element={
+                <ProtectedRoute>
+                  <MediaGeneratorPage />
                 </ProtectedRoute>
               } />
 

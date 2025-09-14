@@ -14,7 +14,9 @@ import {
   RectangleStackIcon,
   EyeIcon,
   ShareIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  UserGroupIcon,
+  PhotoIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -35,6 +37,8 @@ const navigation: NavigationItem[] = [
   { name: 'Products', href: '/dashboard/products', icon: ShoppingBagIcon },
   { name: 'Collections', href: '/dashboard/collections', icon: RectangleStackIcon },
   { name: 'Analytics', href: '/dashboard/analytics', icon: ChartBarIcon },
+  { name: 'Influencer Tracker', href: '/dashboard/influencer-tracker', icon: UserGroupIcon },
+  { name: 'Media Generator', href: '/dashboard/media-generator', icon: PhotoIcon },
   { name: 'Appearance', href: '/dashboard/appearance', icon: EyeIcon },
   { name: 'Social Links', href: '/dashboard/social', icon: ShareIcon },
   { name: 'Role Management', href: '/dashboard/roles', icon: ShieldCheckIcon, adminOnly: true },
