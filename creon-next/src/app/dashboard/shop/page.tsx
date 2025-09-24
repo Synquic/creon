@@ -71,7 +71,7 @@ interface Collection {
   title: string;
   description?: string;
   image?: string;
-  products: string[];
+  products: (string | Product)[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -336,7 +336,9 @@ const ShopPage: React.FC = () => {
       id: string;
       title: string;
       data: object;
-    }) => collectionService.updateCollection(id, title, data),
+    }) => {
+      return collectionService.updateCollection(id, title, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
       toast.success("Collection updated successfully!");
@@ -390,6 +392,21 @@ const ShopPage: React.FC = () => {
     defaultValues: { products: [] },
   });
 
+  // Sync selectedProducts with editingCollection when editing starts
+  React.useEffect(() => {
+    if (editingCollection && editingCollection.products) {
+      // Ensure we only store product IDs as strings, not full objects
+      const productIds = editingCollection.products.map((product) =>
+        typeof product === "string" ? product : product._id
+      );
+      setSelectedProducts(productIds);
+      setValueCollection("products", productIds);
+    } else if (!showCollectionForm) {
+      // Reset when form is closed
+      setSelectedProducts([]);
+    }
+  }, [editingCollection, showCollectionForm, setValueCollection]);
+
   // --- Handlers ---
   // Product
   const handleEditProduct = (product: Product) => {
@@ -417,8 +434,13 @@ const ShopPage: React.FC = () => {
     setValueCollection("title", collection.title);
     setValueCollection("description", collection.description || "");
     setValueCollection("image", collection.image || "");
-    setValueCollection("products", collection.products || []);
-    setSelectedProducts(collection.products || []);
+
+    // Ensure we only work with product IDs (strings), not full objects
+    const productIds = collection.products.map((product) =>
+      typeof product === "string" ? product : product._id
+    );
+    setValueCollection("products", productIds);
+    setSelectedProducts(productIds);
     setCurrentCollectionImage(collection.image || null);
     setShowCollectionForm(true);
   };
@@ -850,13 +872,17 @@ const ShopPage: React.FC = () => {
                     if (editingCollection) {
                       updateCollectionMutation.mutate({
                         id: editingCollection._id,
-                        title: editingCollection.title,
+                        title: data.title,
                         data: cleanData,
                       });
                     } else {
                       createCollectionMutation.mutate(cleanData);
                     }
                   })}
+                  onError={(errors) => {
+                    toast.error("Please fix the errors in the form.");
+                    console.error("❌ Form validation errors:", errors);
+                  }}
                   className="space-y-4"
                 >
                   {/* Collection Image */}
@@ -1011,11 +1037,24 @@ const ShopPage: React.FC = () => {
                   <div className="flex space-x-3">
                     <Button
                       type="submit"
-                      isLoading={isSubmittingCollection}
+                      isLoading={
+                        isSubmittingCollection ||
+                        updateCollectionMutation.isPending ||
+                        createCollectionMutation.isPending
+                      }
+                      disabled={
+                        isSubmittingCollection ||
+                        updateCollectionMutation.isPending ||
+                        createCollectionMutation.isPending
+                      }
                       className="flex-1"
                     >
                       {editingCollection
-                        ? "Update Collection"
+                        ? updateCollectionMutation.isPending
+                          ? "Updating..."
+                          : "Update Collection"
+                        : createCollectionMutation.isPending
+                        ? "Creating..."
                         : "Create Collection"}
                     </Button>
                     <Button
