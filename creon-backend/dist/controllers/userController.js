@@ -9,7 +9,7 @@ const Theme_1 = require("../models/Theme");
 const ShopSettings_1 = __importDefault(require("../models/ShopSettings"));
 const index_1 = require("../index");
 const getEffectiveUserId = (user) => {
-    if (user?.role === 'manager' && user?.parentUserId) {
+    if (user?.role === "manager" && user?.parentUserId) {
         return user.parentUserId;
     }
     return user?.id;
@@ -23,22 +23,24 @@ const updateProfile = async (req, res) => {
             lastName,
             bio,
             socialLinks,
-            theme
+            theme,
         }, { new: true, runValidators: true });
         if (!user) {
             res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found",
             });
             return;
         }
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
-        const profileImageUrl = user.profileImage ?
-            (user.profileImage.startsWith('http') ? user.profileImage : `${baseUrl}${user.profileImage}`) :
-            null;
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        const profileImageUrl = user.profileImage
+            ? user.profileImage.startsWith("http")
+                ? user.profileImage
+                : `${baseUrl}${user.profileImage}`
+            : null;
         res.json({
             success: true,
-            message: 'Profile updated successfully',
+            message: "Profile updated successfully",
             data: {
                 user: {
                     id: user._id,
@@ -50,16 +52,16 @@ const updateProfile = async (req, res) => {
                     profileImage: profileImageUrl,
                     socialLinks: user.socialLinks,
                     theme: user.theme,
-                    profileUrl: `/${user.username}`
-                }
-            }
+                    profileUrl: `/${user.username}`,
+                },
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Update profile error:', error);
+        index_1.logger.error("Update profile error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -67,11 +69,11 @@ exports.updateProfile = updateProfile;
 const changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
-        const user = await models_1.User.findById(req.user?.id).select('+password');
+        const user = await models_1.User.findById(req.user?.id).select("+password");
         if (!user) {
             res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found",
             });
             return;
         }
@@ -79,7 +81,7 @@ const changePassword = async (req, res) => {
         if (!isCurrentPasswordValid) {
             res.status(400).json({
                 success: false,
-                message: 'Current password is incorrect'
+                message: "Current password is incorrect",
             });
             return;
         }
@@ -87,14 +89,14 @@ const changePassword = async (req, res) => {
         await user.save();
         res.json({
             success: true,
-            message: 'Password changed successfully'
+            message: "Password changed successfully",
         });
     }
     catch (error) {
-        index_1.logger.error('Change password error:', error);
+        index_1.logger.error("Change password error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -106,35 +108,39 @@ const getUserProfile = async (req, res) => {
         if (!user) {
             res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found",
             });
             return;
         }
         const links = await models_1.Link.find({
             userId: user._id.toString(),
-            isActive: true
+            isActive: true,
         }).sort({ order: 1 });
         const collections = await models_1.ProductCollection.find({
             userId: user._id.toString(),
-            isActive: true
+            isActive: true,
         }).sort({ order: 1 });
         const products = await models_1.Product.find({
             userId: user._id.toString(),
-            isActive: true
+            isActive: true,
         });
         await models_1.Analytics.create({
             userId: user._id.toString(),
-            type: 'profile_view',
+            type: "profile_view",
             ipAddress: req.ip,
-            userAgent: req.get('User-Agent') || 'unknown',
-            timestamp: new Date()
+            userAgent: req.get("User-Agent") || "unknown",
+            timestamp: new Date(),
         });
         const theme = await Theme_1.Theme.findOne({ userId: user._id.toString() });
-        const shopSettings = await ShopSettings_1.default.findOne({ userId: user._id.toString() });
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
-        const profileImageUrl = user.profileImage ?
-            (user.profileImage.startsWith('http') ? user.profileImage : `${baseUrl}${user.profileImage}`) :
-            null;
+        const shopSettings = await ShopSettings_1.default.findOne({
+            userId: user._id.toString(),
+        });
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        const profileImageUrl = user.profileImage
+            ? user.profileImage.startsWith("http")
+                ? user.profileImage
+                : `${baseUrl}${user.profileImage}`
+            : null;
         res.json({
             success: true,
             data: {
@@ -146,20 +152,20 @@ const getUserProfile = async (req, res) => {
                     bio: user.bio,
                     profileImage: profileImageUrl,
                     socialLinks: user.socialLinks,
-                    theme: theme
+                    theme: theme,
                 },
                 links,
                 collections,
                 products,
-                shopSettings: shopSettings || { isVisible: false, isMainTab: false }
-            }
+                shopSettings: shopSettings || { isVisible: false, isMainTab: false },
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get user profile error:', error);
+        index_1.logger.error("Get user profile error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -171,15 +177,15 @@ const checkUsernameAvailability = async (req, res) => {
         res.json({
             success: true,
             data: {
-                available: !user
-            }
+                available: !user,
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Check username availability error:', error);
+        index_1.logger.error("Check username availability error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -190,27 +196,27 @@ const getDashboardStats = async (req, res) => {
         const [linkCount, productCount, collectionCount] = await Promise.all([
             models_1.Link.countDocuments({ userId: targetUserId }),
             models_1.Product.countDocuments({ userId: targetUserId }),
-            models_1.ProductCollection.countDocuments({ userId: targetUserId })
+            models_1.ProductCollection.countDocuments({ userId: targetUserId }),
         ]);
         const totalClicks = await models_1.Analytics.countDocuments({
             userId: targetUserId,
-            type: { $in: ['link_click', 'product_click'] }
+            type: { $in: ["link_click", "product_click"] },
         });
         const profileViews = await models_1.Analytics.countDocuments({
             userId: targetUserId,
-            type: 'profile_view'
+            type: "profile_view",
         });
         const last7Days = new Date();
         last7Days.setDate(last7Days.getDate() - 7);
         const recentClicks = await models_1.Analytics.countDocuments({
             userId: targetUserId,
-            type: { $in: ['link_click', 'product_click'] },
-            timestamp: { $gte: last7Days }
+            type: { $in: ["link_click", "product_click"] },
+            timestamp: { $gte: last7Days },
         });
         const recentViews = await models_1.Analytics.countDocuments({
             userId: targetUserId,
-            type: 'profile_view',
-            timestamp: { $gte: last7Days }
+            type: "profile_view",
+            timestamp: { $gte: last7Days },
         });
         res.json({
             success: true,
@@ -223,17 +229,17 @@ const getDashboardStats = async (req, res) => {
                     profileViews,
                     last7Days: {
                         clicks: recentClicks,
-                        views: recentViews
-                    }
-                }
-            }
+                        views: recentViews,
+                    },
+                },
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get dashboard stats error:', error);
+        index_1.logger.error("Get dashboard stats error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };

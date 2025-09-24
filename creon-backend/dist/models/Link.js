@@ -38,76 +38,79 @@ const mongoose_1 = __importStar(require("mongoose"));
 const linkSchema = new mongoose_1.Schema({
     userId: {
         type: String,
-        required: [true, 'User ID is required'],
-        ref: 'User'
+        required: [true, "User ID is required"],
+        ref: "User",
     },
     title: {
         type: String,
-        required: [true, 'Title is required'],
+        required: [true, "Title is required"],
         trim: true,
-        maxlength: [100, 'Title cannot exceed 100 characters']
+        maxlength: [100, "Title cannot exceed 100 characters"],
     },
     url: {
         type: String,
-        required: [true, 'URL is required'],
+        required: [true, "URL is required"],
         trim: true,
-        match: [/^https?:\/\/.+/, 'Please enter a valid URL']
+        match: [/^https?:\/\/.+/, "Please enter a valid URL"],
     },
     shortCode: {
         type: String,
-        required: [true, 'Short code is required'],
+        required: [true, "Short code is required"],
         unique: true,
         trim: true,
         lowercase: true,
-        minlength: [4, 'Short code must be at least 4 characters'],
-        maxlength: [20, 'Short code cannot exceed 20 characters'],
-        match: [/^[a-zA-Z0-9_-]+$/, 'Short code can only contain letters, numbers, hyphens, and underscores']
+        minlength: [4, "Short code must be at least 4 characters"],
+        maxlength: [20, "Short code cannot exceed 20 characters"],
+        match: [
+            /^[a-zA-Z0-9_-]+$/,
+            "Short code can only contain letters, numbers, hyphens, and underscores",
+        ],
     },
     description: {
         type: String,
         trim: true,
-        maxlength: [250, 'Description cannot exceed 250 characters']
+        maxlength: [250, "Description cannot exceed 250 characters"],
     },
     image: {
         type: String,
-        default: null
+        default: null,
     },
     isActive: {
         type: Boolean,
-        default: true
+        default: true,
     },
     isWorking: {
         type: Boolean,
-        default: true
+        default: true,
     },
     lastTested: {
         type: Date,
-        default: null
+        default: null,
     },
     clickCount: {
         type: Number,
         default: 0,
-        min: [0, 'Click count cannot be negative']
+        min: [0, "Click count cannot be negative"],
     },
     order: {
         type: Number,
         default: 0,
-        min: [0, 'Order cannot be negative']
+        min: [0, "Order cannot be negative"],
     },
     type: {
         type: String,
-        enum: ['link', 'header', 'social', 'product_collection'],
-        default: 'link'
-    }
+        enum: ["link", "header", "social", "product_collection"],
+        default: "link",
+    },
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
 });
-linkSchema.virtual('shortUrl').get(function () {
+linkSchema.virtual("shortUrl").get(function () {
     return `/s/${this.shortCode}`;
 });
 linkSchema.index({ order: 1 });
 linkSchema.index({ isActive: 1 });
-exports.Link = mongoose_1.default.model('Link', linkSchema);
+exports.Link = mongoose_1.default.model("Link", linkSchema);
 //# sourceMappingURL=Link.js.map

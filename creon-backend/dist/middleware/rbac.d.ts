@@ -1,6 +1,6 @@
-import { Response, NextFunction } from 'express';
-import { AuthRequest } from './auth';
-export type UserRole = 'admin' | 'manager';
+import { Response, NextFunction } from "express";
+import { AuthRequest } from "./auth";
+export type UserRole = "admin" | "manager";
 export declare const hasRole: (userRole: UserRole, requiredRole: UserRole) => boolean;
 export declare const requireRole: (requiredRole: UserRole) => (req: AuthRequest, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
 export declare const canAccessOwnResource: (req: AuthRequest, resourceUserId: string) => boolean;

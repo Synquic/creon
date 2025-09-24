@@ -6,7 +6,7 @@ const Product_1 = require("../models/Product");
 const Link_1 = require("../models/Link");
 const index_1 = require("../index");
 const getEffectiveUserId = (user) => {
-    if (user.role === 'manager' && user.parentId) {
+    if (user.role === "manager" && user.parentId) {
         return user.parentId;
     }
     return user.id;
@@ -14,31 +14,31 @@ const getEffectiveUserId = (user) => {
 const trackEvent = async (req, res) => {
     try {
         const { type, linkId, productId, collectionId } = req.body;
-        const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
-        const userAgent = req.headers['user-agent'] || 'unknown';
+        const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
+        const userAgent = req.headers["user-agent"] || "unknown";
         const referer = req.headers.referer || req.headers.referrer || null;
         let userId = null;
-        if (type === 'link_click' && linkId) {
+        if (type === "link_click" && linkId) {
             const link = await Link_1.Link.findById(linkId);
             if (link) {
                 userId = link.userId;
                 await Link_1.Link.findByIdAndUpdate(linkId, { $inc: { clickCount: 1 } });
             }
         }
-        if (type === 'product_click' && productId) {
+        if (type === "product_click" && productId) {
             const product = await Product_1.Product.findById(productId);
             if (product) {
                 userId = product.userId;
                 await Product_1.Product.findByIdAndUpdate(productId, { $inc: { clickCount: 1 } });
             }
         }
-        if (type === 'profile_view') {
+        if (type === "profile_view") {
             userId = req.body.userId;
         }
         if (!userId) {
             res.status(400).json({
                 success: false,
-                message: 'Unable to determine user for analytics tracking'
+                message: "Unable to determine user for analytics tracking",
             });
             return;
         }
@@ -52,19 +52,19 @@ const trackEvent = async (req, res) => {
             referer,
             device: extractDeviceType(userAgent),
             browser: extractBrowser(userAgent),
-            timestamp: new Date()
+            timestamp: new Date(),
         });
         res.json({
             success: true,
-            message: 'Analytics event tracked successfully',
-            data: { analyticsId: analytics._id }
+            message: "Analytics event tracked successfully",
+            data: { analyticsId: analytics._id },
         });
     }
     catch (error) {
-        index_1.logger.error('Track analytics error:', error);
+        index_1.logger.error("Track analytics error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -72,190 +72,190 @@ exports.trackEvent = trackEvent;
 const getDashboardAnalytics = async (req, res) => {
     try {
         const effectiveUserId = getEffectiveUserId(req.user);
-        const { period = '7d' } = req.query;
+        const { period = "7d" } = req.query;
         const days = getDateRange(period);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
-        const [totalClicks, totalUniqueVisitors, linkClicks, productClicks, profileViews] = await Promise.all([
+        const [totalClicks, totalUniqueVisitors, linkClicks, productClicks, profileViews,] = await Promise.all([
             Analytics_1.Analytics.countDocuments({
                 userId: effectiveUserId,
-                timestamp: { $gte: startDate }
+                timestamp: { $gte: startDate },
             }),
-            Analytics_1.Analytics.distinct('ipAddress', {
+            Analytics_1.Analytics.distinct("ipAddress", {
                 userId: effectiveUserId,
-                timestamp: { $gte: startDate }
-            }).then(ips => ips.length),
+                timestamp: { $gte: startDate },
+            }).then((ips) => ips.length),
             Analytics_1.Analytics.countDocuments({
                 userId: effectiveUserId,
-                type: 'link_click',
-                timestamp: { $gte: startDate }
-            }),
-            Analytics_1.Analytics.countDocuments({
-                userId: effectiveUserId,
-                type: 'product_click',
-                timestamp: { $gte: startDate }
+                type: "link_click",
+                timestamp: { $gte: startDate },
             }),
             Analytics_1.Analytics.countDocuments({
                 userId: effectiveUserId,
-                type: 'profile_view',
-                timestamp: { $gte: startDate }
-            })
+                type: "product_click",
+                timestamp: { $gte: startDate },
+            }),
+            Analytics_1.Analytics.countDocuments({
+                userId: effectiveUserId,
+                type: "profile_view",
+                timestamp: { $gte: startDate },
+            }),
         ]);
         const dailyStats = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
                     userId: effectiveUserId,
-                    timestamp: { $gte: startDate }
-                }
+                    timestamp: { $gte: startDate },
+                },
             },
             {
                 $group: {
                     _id: {
-                        date: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
-                        type: '$type'
+                        date: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+                        type: "$type",
                     },
                     count: { $sum: 1 },
-                    uniqueVisitors: { $addToSet: '$ipAddress' }
-                }
+                    uniqueVisitors: { $addToSet: "$ipAddress" },
+                },
             },
             {
                 $group: {
-                    _id: '$_id.date',
-                    totalClicks: { $sum: '$count' },
-                    uniqueVisitors: { $sum: { $size: '$uniqueVisitors' } },
+                    _id: "$_id.date",
+                    totalClicks: { $sum: "$count" },
+                    uniqueVisitors: { $sum: { $size: "$uniqueVisitors" } },
                     byType: {
                         $push: {
-                            type: '$_id.type',
-                            count: '$count'
-                        }
-                    }
-                }
+                            type: "$_id.type",
+                            count: "$count",
+                        },
+                    },
+                },
             },
             {
-                $sort: { _id: 1 }
-            }
+                $sort: { _id: 1 },
+            },
         ]);
         const topLinks = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
                     userId: effectiveUserId,
-                    type: 'link_click',
+                    type: "link_click",
                     linkId: { $ne: null },
-                    timestamp: { $gte: startDate }
-                }
+                    timestamp: { $gte: startDate },
+                },
             },
             {
                 $group: {
-                    _id: '$linkId',
+                    _id: "$linkId",
                     clicks: { $sum: 1 },
-                    uniqueVisitors: { $addToSet: '$ipAddress' }
-                }
+                    uniqueVisitors: { $addToSet: "$ipAddress" },
+                },
             },
             {
                 $lookup: {
-                    from: 'links',
-                    localField: '_id',
-                    foreignField: '_id',
-                    as: 'link'
-                }
+                    from: "links",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "link",
+                },
             },
             {
-                $unwind: '$link'
+                $unwind: "$link",
             },
             {
                 $project: {
                     _id: 1,
-                    title: '$link.title',
-                    url: '$link.url',
+                    title: "$link.title",
+                    url: "$link.url",
                     clicks: 1,
-                    uniqueVisitors: { $size: '$uniqueVisitors' }
-                }
+                    uniqueVisitors: { $size: "$uniqueVisitors" },
+                },
             },
             {
-                $sort: { clicks: -1 }
+                $sort: { clicks: -1 },
             },
             {
-                $limit: 10
-            }
+                $limit: 10,
+            },
         ]);
         const topProducts = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
                     userId: effectiveUserId,
-                    type: 'product_click',
+                    type: "product_click",
                     productId: { $ne: null },
-                    timestamp: { $gte: startDate }
-                }
+                    timestamp: { $gte: startDate },
+                },
             },
             {
                 $group: {
-                    _id: '$productId',
+                    _id: "$productId",
                     clicks: { $sum: 1 },
-                    uniqueVisitors: { $addToSet: '$ipAddress' }
-                }
+                    uniqueVisitors: { $addToSet: "$ipAddress" },
+                },
             },
             {
                 $lookup: {
-                    from: 'products',
-                    localField: '_id',
-                    foreignField: '_id',
-                    as: 'product'
-                }
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "product",
+                },
             },
             {
-                $unwind: '$product'
+                $unwind: "$product",
             },
             {
                 $project: {
                     _id: 1,
-                    title: '$product.title',
-                    url: '$product.affiliateUrl',
-                    price: '$product.price',
-                    currency: '$product.currency',
+                    title: "$product.title",
+                    url: "$product.affiliateUrl",
+                    price: "$product.price",
+                    currency: "$product.currency",
                     clicks: 1,
-                    uniqueVisitors: { $size: '$uniqueVisitors' }
-                }
+                    uniqueVisitors: { $size: "$uniqueVisitors" },
+                },
             },
             {
-                $sort: { clicks: -1 }
+                $sort: { clicks: -1 },
             },
             {
-                $limit: 10
-            }
+                $limit: 10,
+            },
         ]);
         const deviceStats = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
                     userId: effectiveUserId,
-                    timestamp: { $gte: startDate }
-                }
+                    timestamp: { $gte: startDate },
+                },
             },
             {
                 $group: {
-                    _id: '$device',
-                    count: { $sum: 1 }
-                }
+                    _id: "$device",
+                    count: { $sum: 1 },
+                },
             },
             {
-                $sort: { count: -1 }
-            }
+                $sort: { count: -1 },
+            },
         ]);
         const browserStats = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
                     userId: effectiveUserId,
-                    timestamp: { $gte: startDate }
-                }
+                    timestamp: { $gte: startDate },
+                },
             },
             {
                 $group: {
-                    _id: '$browser',
-                    count: { $sum: 1 }
-                }
+                    _id: "$browser",
+                    count: { $sum: 1 },
+                },
             },
             {
-                $sort: { count: -1 }
-            }
+                $sort: { count: -1 },
+            },
         ]);
         res.json({
             success: true,
@@ -266,21 +266,21 @@ const getDashboardAnalytics = async (req, res) => {
                     linkClicks,
                     productClicks,
                     profileViews,
-                    period
+                    period,
                 },
                 dailyStats,
                 topLinks,
                 topProducts,
                 deviceStats,
-                browserStats
-            }
+                browserStats,
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get dashboard analytics error:', error);
+        index_1.logger.error("Get dashboard analytics error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -289,7 +289,7 @@ const getLinkAnalytics = async (req, res) => {
     try {
         const effectiveUserId = getEffectiveUserId(req.user);
         const { linkId } = req.params;
-        const { period = '7d' } = req.query;
+        const { period = "7d" } = req.query;
         const days = getDateRange(period);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
@@ -297,47 +297,47 @@ const getLinkAnalytics = async (req, res) => {
         if (!link) {
             res.status(404).json({
                 success: false,
-                message: 'Link not found'
+                message: "Link not found",
             });
             return;
         }
         const [totalClicks, uniqueVisitors, dailyClicks] = await Promise.all([
             Analytics_1.Analytics.countDocuments({
                 linkId,
-                type: 'link_click',
-                timestamp: { $gte: startDate }
+                type: "link_click",
+                timestamp: { $gte: startDate },
             }),
-            Analytics_1.Analytics.distinct('ipAddress', {
+            Analytics_1.Analytics.distinct("ipAddress", {
                 linkId,
-                type: 'link_click',
-                timestamp: { $gte: startDate }
-            }).then(ips => ips.length),
+                type: "link_click",
+                timestamp: { $gte: startDate },
+            }).then((ips) => ips.length),
             Analytics_1.Analytics.aggregate([
                 {
                     $match: {
                         linkId,
-                        type: 'link_click',
-                        timestamp: { $gte: startDate }
-                    }
+                        type: "link_click",
+                        timestamp: { $gte: startDate },
+                    },
                 },
                 {
                     $group: {
-                        _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
                         clicks: { $sum: 1 },
-                        uniqueVisitors: { $addToSet: '$ipAddress' }
-                    }
+                        uniqueVisitors: { $addToSet: "$ipAddress" },
+                    },
                 },
                 {
                     $project: {
-                        date: '$_id',
+                        date: "$_id",
                         clicks: 1,
-                        uniqueVisitors: { $size: '$uniqueVisitors' }
-                    }
+                        uniqueVisitors: { $size: "$uniqueVisitors" },
+                    },
                 },
                 {
-                    $sort: { date: 1 }
-                }
-            ])
+                    $sort: { date: 1 },
+                },
+            ]),
         ]);
         res.json({
             success: true,
@@ -346,22 +346,22 @@ const getLinkAnalytics = async (req, res) => {
                     _id: link._id,
                     title: link.title,
                     url: link.url,
-                    totalClicks: link.clickCount
+                    totalClicks: link.clickCount,
                 },
                 analytics: {
                     totalClicks,
                     uniqueVisitors,
                     dailyClicks,
-                    period
-                }
-            }
+                    period,
+                },
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get link analytics error:', error);
+        index_1.logger.error("Get link analytics error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -370,55 +370,58 @@ const getProductAnalytics = async (req, res) => {
     try {
         const effectiveUserId = getEffectiveUserId(req.user);
         const { productId } = req.params;
-        const { period = '7d' } = req.query;
+        const { period = "7d" } = req.query;
         const days = getDateRange(period);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
-        const product = await Product_1.Product.findOne({ _id: productId, userId: effectiveUserId });
+        const product = await Product_1.Product.findOne({
+            _id: productId,
+            userId: effectiveUserId,
+        });
         if (!product) {
             res.status(404).json({
                 success: false,
-                message: 'Product not found'
+                message: "Product not found",
             });
             return;
         }
         const [totalClicks, uniqueVisitors, dailyClicks] = await Promise.all([
             Analytics_1.Analytics.countDocuments({
                 productId,
-                type: 'product_click',
-                timestamp: { $gte: startDate }
+                type: "product_click",
+                timestamp: { $gte: startDate },
             }),
-            Analytics_1.Analytics.distinct('ipAddress', {
+            Analytics_1.Analytics.distinct("ipAddress", {
                 productId,
-                type: 'product_click',
-                timestamp: { $gte: startDate }
-            }).then(ips => ips.length),
+                type: "product_click",
+                timestamp: { $gte: startDate },
+            }).then((ips) => ips.length),
             Analytics_1.Analytics.aggregate([
                 {
                     $match: {
                         productId,
-                        type: 'product_click',
-                        timestamp: { $gte: startDate }
-                    }
+                        type: "product_click",
+                        timestamp: { $gte: startDate },
+                    },
                 },
                 {
                     $group: {
-                        _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+                        _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
                         clicks: { $sum: 1 },
-                        uniqueVisitors: { $addToSet: '$ipAddress' }
-                    }
+                        uniqueVisitors: { $addToSet: "$ipAddress" },
+                    },
                 },
                 {
                     $project: {
-                        date: '$_id',
+                        date: "$_id",
                         clicks: 1,
-                        uniqueVisitors: { $size: '$uniqueVisitors' }
-                    }
+                        uniqueVisitors: { $size: "$uniqueVisitors" },
+                    },
                 },
                 {
-                    $sort: { date: 1 }
-                }
-            ])
+                    $sort: { date: 1 },
+                },
+            ]),
         ]);
         res.json({
             success: true,
@@ -429,57 +432,64 @@ const getProductAnalytics = async (req, res) => {
                     url: product.affiliateUrl,
                     price: product.price,
                     currency: product.currency,
-                    totalClicks: product.clickCount
+                    totalClicks: product.clickCount,
                 },
                 analytics: {
                     totalClicks,
                     uniqueVisitors,
                     dailyClicks,
-                    period
-                }
-            }
+                    period,
+                },
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get product analytics error:', error);
+        index_1.logger.error("Get product analytics error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
 exports.getProductAnalytics = getProductAnalytics;
 const getDateRange = (period) => {
     switch (period) {
-        case '1d': return 1;
-        case '7d': return 7;
-        case '30d': return 30;
-        case '90d': return 90;
-        default: return 7;
+        case "1d":
+            return 1;
+        case "7d":
+            return 7;
+        case "30d":
+            return 30;
+        case "90d":
+            return 90;
+        default:
+            return 7;
     }
 };
 const extractDeviceType = (userAgent) => {
     const ua = userAgent.toLowerCase();
-    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
-        return 'mobile';
+    if (ua.includes("mobile") ||
+        ua.includes("android") ||
+        ua.includes("iphone")) {
+        return "mobile";
     }
-    if (ua.includes('tablet') || ua.includes('ipad')) {
-        return 'tablet';
+    if (ua.includes("tablet") || ua.includes("ipad")) {
+        return "tablet";
     }
-    return 'desktop';
+    return "desktop";
 };
 const extractBrowser = (userAgent) => {
     const ua = userAgent.toLowerCase();
-    if (ua.includes('chrome'))
-        return 'Chrome';
-    if (ua.includes('firefox'))
-        return 'Firefox';
-    if (ua.includes('safari') && !ua.includes('chrome'))
-        return 'Safari';
-    if (ua.includes('edge'))
-        return 'Edge';
-    if (ua.includes('opera'))
-        return 'Opera';
-    return 'Other';
+    if (ua.includes("chrome"))
+        return "Chrome";
+    if (ua.includes("firefox"))
+        return "Firefox";
+    if (ua.includes("safari") && !ua.includes("chrome"))
+        return "Safari";
+    if (ua.includes("edge"))
+        return "Edge";
+    if (ua.includes("opera"))
+        return "Opera";
+    return "Other";
 };
 //# sourceMappingURL=analyticsController.js.map

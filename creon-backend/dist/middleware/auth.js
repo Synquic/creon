@@ -9,7 +9,7 @@ const authenticate = async (req, res, next) => {
         if (!token) {
             res.status(401).json({
                 success: false,
-                message: 'Access token is required'
+                message: "Access token is required",
             });
             return;
         }
@@ -18,7 +18,7 @@ const authenticate = async (req, res, next) => {
         if (!user) {
             res.status(401).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found",
             });
             return;
         }
@@ -28,14 +28,14 @@ const authenticate = async (req, res, next) => {
             email: user.email,
             role: user.role,
             userType: user.userType,
-            parentUserId: user.parentUserId
+            parentUserId: user.parentUserId,
         };
         next();
     }
     catch (error) {
         res.status(401).json({
             success: false,
-            message: error instanceof Error ? error.message : 'Authentication failed'
+            message: error instanceof Error ? error.message : "Authentication failed",
         });
     }
 };
@@ -45,14 +45,14 @@ const authorize = (...roles) => {
         if (!req.user) {
             res.status(401).json({
                 success: false,
-                message: 'Authentication required'
+                message: "Authentication required",
             });
             return;
         }
         if (!roles.includes(req.user.role)) {
             res.status(403).json({
                 success: false,
-                message: 'Insufficient permissions'
+                message: "Insufficient permissions",
             });
             return;
         }
@@ -73,7 +73,7 @@ const optionalAuth = async (req, res, next) => {
                     email: user.email,
                     role: user.role,
                     userType: user.userType,
-                    parentUserId: user.parentUserId
+                    parentUserId: user.parentUserId,
                 };
             }
         }
@@ -88,14 +88,14 @@ const requireParentUser = (req, res, next) => {
     if (!req.user) {
         res.status(401).json({
             success: false,
-            message: 'Authentication required'
+            message: "Authentication required",
         });
         return;
     }
-    if (req.user.userType !== 'parent') {
+    if (req.user.userType !== "parent") {
         res.status(403).json({
             success: false,
-            message: 'Access denied. Only parent users can access this resource.'
+            message: "Access denied. Only parent users can access this resource.",
         });
         return;
     }

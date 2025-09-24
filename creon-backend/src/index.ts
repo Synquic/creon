@@ -26,6 +26,10 @@ import winston from "winston";
 import LokiTransport from "winston-loki";
 import { cronScheduler } from "./jobs/cronScheduler";
 dotenv.config();
+import "./utils/telemetry";
+
+import { logger } from "./utils/telemetry";
+export { logger };
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -78,20 +82,6 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/shop", shopSettingsRoutes);
 app.use("/api/data-parsing", dataParsingRoutes);
 app.use("/", redirectRoutes);
-
-export const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.json(),
-  transports: [
-    new LokiTransport({
-      labels: { app: "creon-backend" },
-      host: process.env.LOKI_URL || "",
-    }),
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
-    new winston.transports.File({ filename: "logs/combined.log" }),
-  ],
-});
 
 app.get("/api/health", (req, res) => {
   res.json({

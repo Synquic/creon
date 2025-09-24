@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   // Redirect root path to /me
   if (request.nextUrl.pathname === "/") {
-    return NextResponse.redirect(new URL("/me", request.url));
+    return NextResponse.redirect(new URL("/ravishingravisha", request.url));
   }
 
   // Redirect /auth/register to /auth/login

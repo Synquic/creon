@@ -1,3 +1,4 @@
-import winston from "winston";
-export declare const logger: winston.Logger;
+import "./utils/telemetry";
+import { logger } from "./utils/telemetry";
+export { logger };
 //# sourceMappingURL=index.d.ts.map

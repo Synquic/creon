@@ -1,5 +1,5 @@
-import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
+import { Response } from "express";
+import { AuthRequest } from "../middleware/auth";
 export declare const createCollection: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const getCollections: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const getCollectionById: (req: AuthRequest, res: Response) => Promise<void>;

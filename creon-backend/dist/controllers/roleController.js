@@ -74,10 +74,7 @@ exports.updateUserRole = updateUserRole;
 const getUsersByRole = async (req, res) => {
     try {
         const { role } = req.params;
-        const validRoles = [
-            "admin",
-            "manager",
-        ];
+        const validRoles = ["admin", "manager"];
         if (!validRoles.includes(role)) {
             res.status(400).json({
                 success: false,

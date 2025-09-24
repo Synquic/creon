@@ -6,7 +6,7 @@ const shortCode_1 = require("../utils/shortCode");
 const index_1 = require("../index");
 const testLinks_1 = require("../jobs/testLinks");
 const getEffectiveUserId = (user) => {
-    if (user?.role === 'manager' && user?.parentUserId) {
+    if (user?.role === "manager" && user?.parentUserId) {
         return user.parentUserId;
     }
     return user?.id;
@@ -142,8 +142,15 @@ const updateLink = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = getEffectiveUserId(req.user);
-        const { title, url, shortCode, description, image, isActive, isWorking, order } = req.body;
-        let updateData = { title, url, description, image, isActive, isWorking };
+        const { title, url, shortCode, description, image, isActive, isWorking, order, } = req.body;
+        let updateData = {
+            title,
+            url,
+            description,
+            image,
+            isActive,
+            isWorking,
+        };
         if (order !== undefined) {
             updateData.order = order;
         }
@@ -218,7 +225,7 @@ const reorderLinks = async (req, res) => {
         console.log("Reorder links called", { body: req.body });
         const linkOrders = req.body.linkOrders;
         if (!Array.isArray(linkOrders)) {
-            return res.status(400).json({ message: 'Invalid input format' });
+            return res.status(400).json({ message: "Invalid input format" });
         }
         const bulkOps = linkOrders.map(({ id, order }) => ({
             updateOne: {
@@ -227,11 +234,13 @@ const reorderLinks = async (req, res) => {
             },
         }));
         const result = await models_1.Link.bulkWrite(bulkOps);
-        return res.status(200).json({ message: 'Links reordered successfully', result });
+        return res
+            .status(200)
+            .json({ message: "Links reordered successfully", result });
     }
     catch (error) {
-        console.error('Error reordering links:', error);
-        return res.status(500).json({ message: 'Server error' });
+        console.error("Error reordering links:", error);
+        return res.status(500).json({ message: "Server error" });
     }
 };
 exports.reorderLinks = reorderLinks;
@@ -340,8 +349,8 @@ const retestLinks = async (req, res) => {
             message: "Link testing completed successfully",
             data: {
                 tested: results.length,
-                working: results.filter(r => r.isWorking).length,
-                notWorking: results.filter(r => !r.isWorking).length,
+                working: results.filter((r) => r.isWorking).length,
+                notWorking: results.filter((r) => !r.isWorking).length,
                 results,
                 stats,
             },
@@ -366,8 +375,8 @@ const retestAllLinks = async (req, res) => {
             message: "All links testing completed successfully",
             data: {
                 tested: results.length,
-                working: results.filter(r => r.isWorking).length,
-                notWorking: results.filter(r => !r.isWorking).length,
+                working: results.filter((r) => r.isWorking).length,
+                notWorking: results.filter((r) => !r.isWorking).length,
                 stats,
             },
         });

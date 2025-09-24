@@ -1,4 +1,4 @@
-import { Document } from 'mongoose';
+import { Document } from "mongoose";
 export interface IUser extends Document {
     username: string;
     email: string;
@@ -7,8 +7,8 @@ export interface IUser extends Document {
     lastName?: string;
     bio?: string;
     profileImage?: string;
-    role: 'admin' | 'manager';
-    userType: 'parent' | 'sub';
+    role: "admin" | "manager";
+    userType: "parent" | "sub";
     parentUserId?: string;
     createdBy?: string;
     isFirstLogin: boolean;
@@ -43,7 +43,7 @@ export interface ILink extends Document {
     lastTested?: Date;
     clickCount: number;
     order: number;
-    type: 'link' | 'header' | 'social' | 'product_collection';
+    type: "link" | "header" | "social" | "product_collection";
     createdAt: Date;
     updatedAt: Date;
 }
@@ -80,7 +80,7 @@ export interface IAnalytics extends Document {
     userId: string;
     linkId?: string;
     productId?: string;
-    type: 'link_click' | 'product_click' | 'profile_view';
+    type: "link_click" | "product_click" | "profile_view";
     ipAddress: string;
     userAgent: string;
     referer?: string;

@@ -135,11 +135,11 @@ const changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
         const userId = req.user?.id;
-        const user = await models_1.User.findById(userId).select('+password');
+        const user = await models_1.User.findById(userId).select("+password");
         if (!user) {
             res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found",
             });
             return;
         }
@@ -148,7 +148,7 @@ const changePassword = async (req, res) => {
             if (!isCurrentPasswordValid) {
                 res.status(400).json({
                     success: false,
-                    message: 'Current password is incorrect'
+                    message: "Current password is incorrect",
                 });
                 return;
             }
@@ -158,14 +158,14 @@ const changePassword = async (req, res) => {
         await user.save();
         res.json({
             success: true,
-            message: 'Password changed successfully'
+            message: "Password changed successfully",
         });
     }
     catch (error) {
-        index_1.logger.error('Change password error:', error);
+        index_1.logger.error("Change password error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -320,7 +320,7 @@ const getProfile = async (req, res) => {
             return;
         }
         let profileUser = currentUser;
-        if (currentUser.role === 'manager' && currentUser.parentUserId) {
+        if (currentUser.role === "manager" && currentUser.parentUserId) {
             const parentUser = await models_1.User.findById(currentUser.parentUserId);
             if (parentUser) {
                 profileUser = parentUser;

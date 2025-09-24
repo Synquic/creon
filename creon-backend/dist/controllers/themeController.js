@@ -4,7 +4,7 @@ exports.resetTheme = exports.getPublicTheme = exports.updateTheme = exports.getU
 const Theme_1 = require("../models/Theme");
 const index_1 = require("../index");
 const getEffectiveUserId = (user) => {
-    if (user?.role === 'manager' && user?.parentUserId) {
+    if (user?.role === "manager" && user?.parentUserId) {
         return user.parentUserId;
     }
     return user?.id;
@@ -18,14 +18,14 @@ const getUserTheme = async (req, res) => {
         }
         res.json({
             success: true,
-            data: { theme }
+            data: { theme },
         });
     }
     catch (error) {
-        index_1.logger.error('Get user theme error:', error);
+        index_1.logger.error("Get user theme error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -35,12 +35,27 @@ const updateTheme = async (req, res) => {
         const userId = getEffectiveUserId(req.user);
         const themeData = req.body;
         const allowedFields = [
-            'backgroundColor', 'primaryColor', 'secondaryColor', 'textColor', 'accentColor',
-            'fontFamily', 'fontSize', 'fontWeight',
-            'buttonStyle', 'buttonShadow', 'buttonBorderWidth', 'buttonAnimation',
-            'profileImageShape', 'profileImageSize', 'linkSpacing', 'maxWidth',
-            'backgroundGradient', 'gradientDirection', 'backdropBlur', 'hideBranding',
-            'customCss'
+            "backgroundColor",
+            "primaryColor",
+            "secondaryColor",
+            "textColor",
+            "accentColor",
+            "fontFamily",
+            "fontSize",
+            "fontWeight",
+            "buttonStyle",
+            "buttonShadow",
+            "buttonBorderWidth",
+            "buttonAnimation",
+            "profileImageShape",
+            "profileImageSize",
+            "linkSpacing",
+            "maxWidth",
+            "backgroundGradient",
+            "gradientDirection",
+            "backdropBlur",
+            "hideBranding",
+            "customCss",
         ];
         const updateData = {};
         for (const field of allowedFields) {
@@ -48,26 +63,30 @@ const updateTheme = async (req, res) => {
                 updateData[field] = themeData[field];
             }
         }
-        const theme = await Theme_1.Theme.findOneAndUpdate({ userId }, updateData, { new: true, upsert: true, runValidators: true });
+        const theme = await Theme_1.Theme.findOneAndUpdate({ userId }, updateData, {
+            new: true,
+            upsert: true,
+            runValidators: true,
+        });
         res.json({
             success: true,
-            message: 'Theme updated successfully',
-            data: { theme }
+            message: "Theme updated successfully",
+            data: { theme },
         });
     }
     catch (error) {
-        index_1.logger.error('Update theme error:', error);
-        if (error.name === 'ValidationError') {
+        index_1.logger.error("Update theme error:", error);
+        if (error.name === "ValidationError") {
             res.status(400).json({
                 success: false,
-                message: 'Invalid theme data',
-                errors: error.errors
+                message: "Invalid theme data",
+                errors: error.errors,
             });
             return;
         }
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -77,39 +96,39 @@ const getPublicTheme = async (req, res) => {
         const { userId } = req.params;
         const theme = await Theme_1.Theme.findOne({ userId });
         const defaultTheme = {
-            backgroundColor: '#ffffff',
-            primaryColor: '#16a34a',
-            secondaryColor: '#15803d',
-            textColor: '#1f2937',
-            accentColor: '#3b82f6',
-            fontFamily: 'Inter',
-            fontSize: 'medium',
-            fontWeight: 'normal',
-            buttonStyle: 'rounded',
+            backgroundColor: "#ffffff",
+            primaryColor: "#16a34a",
+            secondaryColor: "#15803d",
+            textColor: "#1f2937",
+            accentColor: "#3b82f6",
+            fontFamily: "Inter",
+            fontSize: "medium",
+            fontWeight: "normal",
+            buttonStyle: "rounded",
             buttonShadow: true,
             buttonBorderWidth: 0,
-            buttonAnimation: 'hover-scale',
-            profileImageShape: 'circle',
-            profileImageSize: 'medium',
-            linkSpacing: 'normal',
-            maxWidth: 'normal',
+            buttonAnimation: "hover-scale",
+            profileImageShape: "circle",
+            profileImageSize: "medium",
+            linkSpacing: "normal",
+            maxWidth: "normal",
             backgroundGradient: false,
-            gradientDirection: 'vertical',
+            gradientDirection: "vertical",
             backdropBlur: false,
-            hideBranding: false
+            hideBranding: false,
         };
         res.json({
             success: true,
             data: {
-                theme: theme || defaultTheme
-            }
+                theme: theme || defaultTheme,
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get public theme error:', error);
+        index_1.logger.error("Get public theme error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -121,15 +140,15 @@ const resetTheme = async (req, res) => {
         const theme = await Theme_1.Theme.create({ userId });
         res.json({
             success: true,
-            message: 'Theme reset to default successfully',
-            data: { theme }
+            message: "Theme reset to default successfully",
+            data: { theme },
         });
     }
     catch (error) {
-        index_1.logger.error('Reset theme error:', error);
+        index_1.logger.error("Reset theme error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
