@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isValidShortCode = exports.generateUniqueShortCode = exports.generateShortCode = void 0;
-const CHARACTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const generateShortCode = (length = 8) => {
-    let result = '';
+    let result = "";
     const charactersLength = CHARACTERS.length;
     for (let i = 0; i < length; i++) {
         const randomIndex = Math.floor(Math.random() * charactersLength);
@@ -20,12 +20,12 @@ const generateUniqueShortCode = async (checkFunction, length = 8, maxAttempts = 
             return code;
         }
     }
-    throw new Error('Unable to generate unique short code');
+    throw new Error("Unable to generate unique short code");
 };
 exports.generateUniqueShortCode = generateUniqueShortCode;
 const isValidShortCode = (code) => {
     const pattern = /^[a-zA-Z0-9_-]+$/;
-    return pattern.test(code) && code.length >= 4 && code.length <= 20;
+    return pattern.test(code) && code.length >= 4 && code.length <= 50;
 };
 exports.isValidShortCode = isValidShortCode;
 //# sourceMappingURL=shortCode.js.map

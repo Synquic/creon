@@ -51,7 +51,7 @@ const productSchema = new Schema<IProduct>(
       trim: true,
       lowercase: true,
       minlength: [4, "Short code must be at least 4 characters"],
-      maxlength: [20, "Short code cannot exceed 20 characters"],
+      maxlength: [50, "Short code cannot exceed 50 characters"],
       match: [
         /^[a-zA-Z0-9_-]+$/,
         "Short code can only contain letters, numbers, hyphens, and underscores",

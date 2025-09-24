@@ -81,9 +81,74 @@ export const linkService = {
   fetchParsedData: async (url: string) => {
     console.log("🔎 Fetching parsed data for URL:", url);
     try {
+      // First, try to fetch HTML from client-side
+      console.log("📄 Attempting client-side HTML fetch...");
+      let html = "";
+
+      try {
+        // Try direct fetch first (may fail due to CORS)
+        const htmlResponse = await fetch(url, {
+          method: "GET",
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          },
+          mode: "cors",
+        });
+
+        if (htmlResponse.ok) {
+          html = await htmlResponse.text();
+          console.log(
+            "✅ Client-side fetch successful, HTML length:",
+            html.length
+          );
+        } else {
+          throw new Error(`HTTP ${htmlResponse.status}`);
+        }
+      } catch (corsError) {
+        const errorMessage =
+          corsError instanceof Error ? corsError.message : String(corsError);
+        console.log(
+          "⚠️ Direct fetch failed (likely CORS):",
+          errorMessage,
+          "- trying CORS proxy..."
+        );
+
+        // Try with a CORS proxy as fallback
+        try {
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(
+            url
+          )}`;
+          const proxyResponse = await fetch(proxyUrl);
+
+          if (proxyResponse.ok) {
+            html = await proxyResponse.text();
+            console.log(
+              "✅ CORS proxy fetch successful, HTML length:",
+              html.length
+            );
+          } else {
+            throw new Error(`Proxy HTTP ${proxyResponse.status}`);
+          }
+        } catch (proxyError) {
+          console.log("❌ CORS proxy also failed:", proxyError);
+          // Fall back to sending just URL (old method)
+          console.log("🔄 Falling back to server-side fetch...");
+          const response = await axiosInstance.post(
+            "/data-parsing/fetch-response",
+            { url },
+            { timeout: 0 }
+          );
+          console.log("✅ Server-side fallback successful");
+          return response;
+        }
+      }
+
+      // Send HTML to server for LLM parsing
+      console.log("🤖 Sending HTML to server for LLM parsing...");
       const response = await axiosInstance.post(
         "/data-parsing/fetch-response",
-        { url },
+        { html, url }, // Send both HTML and URL (URL for caching)
         { timeout: 0 }
       );
       console.log("✅ Parsed data fetched successfully");

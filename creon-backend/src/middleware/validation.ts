@@ -67,8 +67,8 @@ export const linkValidation = [
 
   body("shortCode")
     .optional()
-    .isLength({ min: 4, max: 20 })
-    .withMessage("Short code must be 4-20 characters")
+    .isLength({ min: 4, max: 50 })
+    .withMessage("Short code must be 4-50 characters")
     .matches(/^[a-zA-Z0-9_-]+$/)
     .withMessage(
       "Short code can only contain letters, numbers, hyphens, and underscores"
@@ -115,8 +115,8 @@ export const productValidation = [
 
   body("shortCode")
     .optional()
-    .isLength({ min: 4, max: 20 })
-    .withMessage("Short code must be 4-20 characters")
+    .isLength({ min: 4, max: 50 })
+    .withMessage("Short code must be 4-50 characters")
     .matches(/^[a-zA-Z0-9_-]+$/)
     .withMessage(
       "Short code can only contain letters, numbers, hyphens, and underscores"
@@ -140,8 +140,8 @@ export const usernameValidation = [
 
 export const shortCodeValidation = [
   param("shortCode")
-    .isLength({ min: 4, max: 20 })
-    .withMessage("Short code must be 4-20 characters")
+    .isLength({ min: 4, max: 50 })
+    .withMessage("Short code must be 4-50 characters")
     .matches(/^[a-zA-Z0-9_-]+$/)
     .withMessage(
       "Short code can only contain letters, numbers, hyphens, and underscores"

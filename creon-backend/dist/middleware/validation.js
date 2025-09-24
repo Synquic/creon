@@ -53,8 +53,8 @@ exports.linkValidation = [
     (0, express_validator_1.body)("url").isURL().withMessage("Please provide a valid URL"),
     (0, express_validator_1.body)("shortCode")
         .optional()
-        .isLength({ min: 4, max: 20 })
-        .withMessage("Short code must be 4-20 characters")
+        .isLength({ min: 4, max: 50 })
+        .withMessage("Short code must be 4-50 characters")
         .matches(/^[a-zA-Z0-9_-]+$/)
         .withMessage("Short code can only contain letters, numbers, hyphens, and underscores"),
     (0, express_validator_1.body)("description")
@@ -91,8 +91,8 @@ exports.productValidation = [
         .withMessage("Description cannot exceed 500 characters"),
     (0, express_validator_1.body)("shortCode")
         .optional()
-        .isLength({ min: 4, max: 20 })
-        .withMessage("Short code must be 4-20 characters")
+        .isLength({ min: 4, max: 50 })
+        .withMessage("Short code must be 4-50 characters")
         .matches(/^[a-zA-Z0-9_-]+$/)
         .withMessage("Short code can only contain letters, numbers, hyphens, and underscores"),
     (0, express_validator_1.body)("tags").optional().isArray().withMessage("Tags must be an array"),
@@ -110,8 +110,8 @@ exports.usernameValidation = [
 ];
 exports.shortCodeValidation = [
     (0, express_validator_1.param)("shortCode")
-        .isLength({ min: 4, max: 20 })
-        .withMessage("Short code must be 4-20 characters")
+        .isLength({ min: 4, max: 50 })
+        .withMessage("Short code must be 4-50 characters")
         .matches(/^[a-zA-Z0-9_-]+$/)
         .withMessage("Short code can only contain letters, numbers, hyphens, and underscores"),
 ];
