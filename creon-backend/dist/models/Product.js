@@ -99,6 +99,14 @@ const productSchema = new mongoose_1.Schema({
         type: Boolean,
         default: true,
     },
+    isWorking: {
+        type: Boolean,
+        default: true,
+    },
+    lastTested: {
+        type: Date,
+        default: null,
+    },
     tags: [
         {
             type: String,

@@ -93,4 +93,16 @@ export const linkService = {
       throw error;
     }
   },
+
+  retestLinks: async () => {
+    console.log("🔄 Retesting links");
+    try {
+      const response = await axiosInstance.post("/links/retest");
+      console.log("✅ Links retested successfully");
+      return response;
+    } catch (error) {
+      console.error("❌ Retest links error:", error);
+      throw error;
+    }
+  },
 };

@@ -24,13 +24,13 @@ export default function Providers({ children }) {
             success: {
               duration: 3000,
               iconTheme: {
-                primary: '#15803d',
+                primary: '#8b5cf6',
                 secondary: '#ffffff',
               },
               style: {
-                background: '#f0fdf4',
-                color: '#166534',
-                border: '1px solid #bbf7d0',
+                background: '#faf5ff',
+                color: '#6b21a8',
+                border: '1px solid #d8b4fe',
               },
             },
             error: {

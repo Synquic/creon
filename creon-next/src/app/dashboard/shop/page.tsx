@@ -112,7 +112,9 @@ const ShopPage: React.FC = () => {
   // Product state
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [currentProductImage, setCurrentProductImage] = useState<string | null>(null);
+  const [currentProductImage, setCurrentProductImage] = useState<string | null>(
+    null
+  );
   // --- Product Form ---
   const {
     register: registerProduct,
@@ -137,24 +139,52 @@ const ShopPage: React.FC = () => {
     productImage?: string;
     [key: string]: unknown;
   }
-  const [pendingParsedData, setPendingParsedData] = useState<ParsedProductData | null>(null);
+  const [pendingParsedData, setPendingParsedData] =
+    useState<ParsedProductData | null>(null);
 
   // Hydrate product form with parsed data when available
   React.useEffect(() => {
     if (showProductForm && pendingParsedData) {
       setTimeout(() => {
         try {
-          setValueProduct("title", pendingParsedData.productTitle || "", { shouldValidate: true, shouldDirty: true });
-          setValueProduct("description", pendingParsedData.productDescription || "", { shouldValidate: true, shouldDirty: true });
-          const priceValue = typeof pendingParsedData.price === "number"
-            ? pendingParsedData.price
-            : Number((pendingParsedData.price as number | string | undefined)?.toString().replace(/[^\d.]/g, "")) || 0;
-          setValueProduct("price", priceValue, { shouldValidate: true, shouldDirty: true });
-          setValueProduct("currency", pendingParsedData.currency || "USD", { shouldValidate: true, shouldDirty: true });
-          setValueProduct("affiliateUrl", url, { shouldValidate: true, shouldDirty: true });
-          setValueProduct("shortCode", pendingParsedData.productCode || "", { shouldValidate: true, shouldDirty: true });
+          setValueProduct("title", pendingParsedData.productTitle || "", {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setValueProduct(
+            "description",
+            pendingParsedData.productDescription || "",
+            { shouldValidate: true, shouldDirty: true }
+          );
+          const priceValue =
+            typeof pendingParsedData.price === "number"
+              ? pendingParsedData.price
+              : Number(
+                  (pendingParsedData.price as number | string | undefined)
+                    ?.toString()
+                    .replace(/[^\d.]/g, "")
+                ) || 0;
+          setValueProduct("price", priceValue, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setValueProduct("currency", pendingParsedData.currency || "USD", {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setValueProduct("affiliateUrl", url, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setValueProduct("shortCode", pendingParsedData.productCode || "", {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
           if (pendingParsedData.productImage) {
-            setValueProduct("image", pendingParsedData.productImage, { shouldValidate: true, shouldDirty: true });
+            setValueProduct("image", pendingParsedData.productImage, {
+              shouldValidate: true,
+              shouldDirty: true,
+            });
             setCurrentProductImage(pendingParsedData.productImage);
           }
         } catch {
@@ -298,8 +328,15 @@ const ShopPage: React.FC = () => {
     },
   });
   const updateCollectionMutation = useMutation({
-    mutationFn: ({ id, title, data }: { id: string; title: string; data: object }) =>
-      collectionService.updateCollection(id, title, data),
+    mutationFn: ({
+      id,
+      title,
+      data,
+    }: {
+      id: string;
+      title: string;
+      data: object;
+    }) => collectionService.updateCollection(id, title, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
       toast.success("Collection updated successfully!");
@@ -447,7 +484,6 @@ const ShopPage: React.FC = () => {
       {/* Products Tab */}
       {activeTab === "products" && (
         <div>
-
           {/* Add Product Button */}
           {!showProductForm && (
             <motion.button
@@ -464,23 +500,23 @@ const ShopPage: React.FC = () => {
           {/* Auto-parse product from URL (only when not editing) */}
           {!editingProduct && (
             <div className="flex items-center gap-2 mb-6">
-              <input
-                type="text"
-                className="border rounded px-3 py-2 flex-1"
-                placeholder="Paste product URL to parse..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={parsing}
+              <Input
+              type="text"
+              className="border rounded-2xl px-3 py-2 flex-1 transition-all hover:border-yellow-400 hover:shadow-[0_0_0_3px_rgba(255,215,0,0.3)]"
+              placeholder="Paste product URL to parse with AI✨..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              disabled={parsing}
               />
               <Button onClick={handleParseUrl} disabled={!url || parsing}>
-                {parsing ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-                    Parsing...
-                  </span>
-                ) : (
-                  "Parse URL"
-                )}
+              {parsing ? (
+                <span className="flex items-center gap-2">
+                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                Parsing...
+                </span>
+              ) : (
+                "Parse with AI✨"
+              )}
               </Button>
             </div>
           )}

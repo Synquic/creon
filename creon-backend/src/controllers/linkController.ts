@@ -3,6 +3,17 @@ import { Link, Analytics } from "../models";
 import { AuthRequest } from "../middleware/auth";
 import { generateUniqueShortCode, isValidShortCode } from "../utils/shortCode";
 import { logger } from "../index";
+import { LinkTester } from "../jobs/testLinks";
+
+// Helper function to get the effective user for profile operations
+const getEffectiveUserId = (user: any): string => {
+  // If user is a manager, return their parent's ID
+  if (user?.role === 'manager' && user?.parentUserId) {
+    return user.parentUserId;
+  }
+  // Otherwise return their own ID
+  return user?.id;
+};
 
 const checkShortCodeUnique = async (code: string): Promise<boolean> => {
   const existing = await Link.findOne({ shortCode: code });
@@ -30,8 +41,9 @@ export const createLink = async (
       description,
       image,
       type = "link",
+      isWorking = true,
     } = req.body;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     let finalShortCode = shortCode;
 
@@ -67,6 +79,7 @@ export const createLink = async (
       description,
       image,
       type,
+      isWorking,
       order,
     });
 
@@ -90,7 +103,7 @@ export const getLinks = async (
 ): Promise<void> => {
   try {
     logger.info("Get links called", { query: req.query });
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
     const {
       page = 1,
       limit = 20,
@@ -137,7 +150,7 @@ export const getLinkById = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     const link = await Link.findOne({ _id: id, userId });
 
@@ -168,11 +181,11 @@ export const updateLink = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
-    const { title, url, shortCode, description, image, isActive, order } =
+    const userId = getEffectiveUserId(req.user);
+    const { title, url, shortCode, description, image, isActive, isWorking, order } =
       req.body;
 
-    let updateData: any = { title, url, description, image, isActive };
+    let updateData: any = { title, url, description, image, isActive, isWorking };
 
     if (order !== undefined) {
       updateData.order = order;
@@ -228,7 +241,7 @@ export const deleteLink = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     const link = await Link.findOneAndDelete({ _id: id, userId });
 
@@ -326,7 +339,7 @@ export const getLinkAnalytics = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
     const { period = "7d" } = req.query;
 
     const link = await Link.findOne({ _id: id, userId });
@@ -375,6 +388,81 @@ export const getLinkAnalytics = async (
     res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+export const retestLinks = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = getEffectiveUserId(req.user);
+    
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+      return;
+    }
+    
+    logger.info(`Manual link retest requested by user: ${userId}`);
+
+    // Test links for the specific user
+    const results = await LinkTester.testLinksForUser(userId);
+    
+    // Get updated stats
+    const stats = await LinkTester.getLinkTestStats();
+
+    res.json({
+      success: true,
+      message: "Link testing completed successfully",
+      data: {
+        tested: results.length,
+        working: results.filter(r => r.isWorking).length,
+        notWorking: results.filter(r => !r.isWorking).length,
+        results,
+        stats,
+      },
+    });
+  } catch (error) {
+    logger.error("Retest links error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to test links",
+    });
+  }
+};
+
+export const retestAllLinks = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    logger.info("Manual retest of all links requested");
+
+    // Test all links in the system
+    const results = await LinkTester.testAllLinks();
+    
+    // Get updated stats
+    const stats = await LinkTester.getLinkTestStats();
+
+    res.json({
+      success: true,
+      message: "All links testing completed successfully",
+      data: {
+        tested: results.length,
+        working: results.filter(r => r.isWorking).length,
+        notWorking: results.filter(r => !r.isWorking).length,
+        stats,
+      },
+    });
+  } catch (error) {
+    logger.error("Retest all links error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to test all links",
     });
   }
 };

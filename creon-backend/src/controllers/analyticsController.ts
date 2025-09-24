@@ -5,6 +5,14 @@ import { Product } from '../models/Product';
 import { Link } from '../models/Link';
 import { logger } from '../index';
 
+// Helper function to get the effective user ID (parent for managers, self for admins)
+const getEffectiveUserId = (user: any): string => {
+  if (user.role === 'manager' && user.parentId) {
+    return user.parentId;
+  }
+  return user.id;
+};
+
 // Track analytics event
 export const trackEvent = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -82,7 +90,7 @@ export const trackEvent = async (req: Request, res: Response): Promise<void> => 
 // Get analytics dashboard data
 export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const effectiveUserId = getEffectiveUserId(req.user);
     const { period = '7d' } = req.query;
 
     const days = getDateRange(period as string);
@@ -92,25 +100,25 @@ export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Pr
     // Get total stats
     const [totalClicks, totalUniqueVisitors, linkClicks, productClicks, profileViews] = await Promise.all([
       Analytics.countDocuments({
-        userId,
+        userId: effectiveUserId,
         timestamp: { $gte: startDate }
       }),
       Analytics.distinct('ipAddress', {
-        userId,
+        userId: effectiveUserId,
         timestamp: { $gte: startDate }
       }).then(ips => ips.length),
       Analytics.countDocuments({
-        userId,
+        userId: effectiveUserId,
         type: 'link_click',
         timestamp: { $gte: startDate }
       }),
       Analytics.countDocuments({
-        userId,
+        userId: effectiveUserId,
         type: 'product_click',
         timestamp: { $gte: startDate }
       }),
       Analytics.countDocuments({
-        userId,
+        userId: effectiveUserId,
         type: 'profile_view',
         timestamp: { $gte: startDate }
       })
@@ -120,7 +128,7 @@ export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Pr
     const dailyStats = await Analytics.aggregate([
       {
         $match: {
-          userId,
+          userId: effectiveUserId,
           timestamp: { $gte: startDate }
         }
       },
@@ -156,7 +164,7 @@ export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Pr
     const topLinks = await Analytics.aggregate([
       {
         $match: {
-          userId,
+          userId: effectiveUserId,
           type: 'link_click',
           linkId: { $ne: null },
           timestamp: { $gte: startDate }
@@ -201,7 +209,7 @@ export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Pr
     const topProducts = await Analytics.aggregate([
       {
         $match: {
-          userId,
+          userId: effectiveUserId,
           type: 'product_click',
           productId: { $ne: null },
           timestamp: { $gte: startDate }
@@ -248,7 +256,7 @@ export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Pr
     const deviceStats = await Analytics.aggregate([
       {
         $match: {
-          userId,
+          userId: effectiveUserId,
           timestamp: { $gte: startDate }
         }
       },
@@ -267,7 +275,7 @@ export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Pr
     const browserStats = await Analytics.aggregate([
       {
         $match: {
-          userId,
+          userId: effectiveUserId,
           timestamp: { $gte: startDate }
         }
       },
@@ -313,7 +321,7 @@ export const getDashboardAnalytics = async (req: AuthRequest, res: Response): Pr
 // Get specific link analytics
 export const getLinkAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const effectiveUserId = getEffectiveUserId(req.user);
     const { linkId } = req.params;
     const { period = '7d' } = req.query;
 
@@ -322,7 +330,7 @@ export const getLinkAnalytics = async (req: AuthRequest, res: Response): Promise
     startDate.setDate(startDate.getDate() - days);
 
     // Verify link ownership
-    const link = await Link.findOne({ _id: linkId, userId });
+    const link = await Link.findOne({ _id: linkId, userId: effectiveUserId });
     if (!link) {
       res.status(404).json({
         success: false,
@@ -401,7 +409,7 @@ export const getLinkAnalytics = async (req: AuthRequest, res: Response): Promise
 // Get specific product analytics
 export const getProductAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const effectiveUserId = getEffectiveUserId(req.user);
     const { productId } = req.params;
     const { period = '7d' } = req.query;
 
@@ -410,7 +418,7 @@ export const getProductAnalytics = async (req: AuthRequest, res: Response): Prom
     startDate.setDate(startDate.getDate() - days);
 
     // Verify product ownership
-    const product = await Product.findOne({ _id: productId, userId });
+    const product = await Product.findOne({ _id: productId, userId: effectiveUserId });
     if (!product) {
       res.status(404).json({
         success: false,

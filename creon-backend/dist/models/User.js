@@ -101,8 +101,27 @@ const userSchema = new mongoose_1.Schema({
     },
     role: {
         type: String,
-        enum: ["super_admin", "admin", "manager", "viewer", "user"],
-        default: "user",
+        enum: ["admin", "manager"],
+        default: "admin",
+    },
+    userType: {
+        type: String,
+        enum: ["parent", "sub"],
+        default: "parent",
+    },
+    parentUserId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+    },
+    createdBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+    },
+    isFirstLogin: {
+        type: Boolean,
+        default: false,
     },
     isEmailVerified: {
         type: Boolean,

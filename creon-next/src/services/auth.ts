@@ -130,7 +130,7 @@ export const authService = {
     console.log("👤 Getting public user profile:", username);
     try {
       const response = await axios.get(
-        `${process.env.API_BASE_URL}/users/${username}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}users/${username}`
       );
       console.log("✅ Public profile retrieved successfully");
       return response;

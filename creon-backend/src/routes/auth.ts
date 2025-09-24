@@ -6,7 +6,8 @@ import {
   logout,
   logoutAll,
   getProfile,
-  checkUsernameAvailability
+  checkUsernameAvailability,
+  changePassword
 } from '../controllers/authController';
 import { authenticate } from '../middleware/auth';
 import { authLimiter } from '../middleware/rateLimiting';
@@ -41,5 +42,7 @@ router.post('/logout-all', authenticate, logoutAll);
 router.get('/profile', authenticate, getProfile);
 
 router.get('/check-username/:username', checkUsernameAvailability);
+
+router.post('/change-password', authenticate, changePassword);
 
 export default router;

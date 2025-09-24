@@ -14,5 +14,7 @@ router.get("/:id", linkController_1.getLinkById);
 router.put("/:id", linkController_1.updateLink);
 router.delete("/:id", linkController_1.deleteLink);
 router.get("/:id/analytics", linkController_1.getLinkAnalytics);
+router.post("/retest", linkController_1.retestLinks);
+router.post("/retest-all", linkController_1.retestAllLinks);
 exports.default = router;
 //# sourceMappingURL=links.js.map

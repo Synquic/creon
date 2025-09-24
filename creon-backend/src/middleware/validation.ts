@@ -1,6 +1,9 @@
 import { body, param, query, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
 
+// Export express-validator functions for use in other files
+export { body, param, query };
+
 export const handleValidationErrors = (
   req: Request,
   res: Response,

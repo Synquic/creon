@@ -3,9 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetTheme = exports.getPublicTheme = exports.updateTheme = exports.getUserTheme = void 0;
 const Theme_1 = require("../models/Theme");
 const index_1 = require("../index");
+const getEffectiveUserId = (user) => {
+    if (user?.role === 'manager' && user?.parentUserId) {
+        return user.parentUserId;
+    }
+    return user?.id;
+};
 const getUserTheme = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         let theme = await Theme_1.Theme.findOne({ userId });
         if (!theme) {
             theme = await Theme_1.Theme.create({ userId });
@@ -26,7 +32,7 @@ const getUserTheme = async (req, res) => {
 exports.getUserTheme = getUserTheme;
 const updateTheme = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const themeData = req.body;
         const allowedFields = [
             'backgroundColor', 'primaryColor', 'secondaryColor', 'textColor', 'accentColor',
@@ -110,7 +116,7 @@ const getPublicTheme = async (req, res) => {
 exports.getPublicTheme = getPublicTheme;
 const resetTheme = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         await Theme_1.Theme.findOneAndDelete({ userId });
         const theme = await Theme_1.Theme.create({ userId });
         res.json({

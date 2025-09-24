@@ -8,7 +8,11 @@ export interface IUser extends Document {
   lastName?: string;
   bio?: string;
   profileImage?: string;
-  role: 'super_admin' | 'admin' | 'manager' | 'viewer' | 'user';
+  role: 'admin' | 'manager';
+  userType: 'parent' | 'sub';
+  parentUserId?: string;
+  createdBy?: string;
+  isFirstLogin: boolean;
   isEmailVerified: boolean;
   socialLinks: {
     instagram?: string;
@@ -37,6 +41,8 @@ export interface ILink extends Document {
   description?: string;
   image?: string;
   isActive: boolean;
+  isWorking: boolean;
+  lastTested?: Date;
   clickCount: number;
   order: number;
   type: 'link' | 'header' | 'social' | 'product_collection';
@@ -56,6 +62,8 @@ export interface IProduct extends Document {
   shortCode: string;
   clickCount: number;
   isActive: boolean;
+  isWorking: boolean;
+  lastTested?: Date;
   tags: string[];
   createdAt: Date;
   updatedAt: Date;

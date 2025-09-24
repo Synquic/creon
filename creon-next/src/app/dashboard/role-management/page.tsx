@@ -22,7 +22,7 @@ interface User {
   email: string;
   firstName?: string;
   lastName?: string;
-  role: "super_admin" | "admin" | "manager" | "viewer" | "user";
+  role: "admin" | "manager";
   isEmailVerified: boolean;
   createdAt: string;
   profileImage?: string;
@@ -37,19 +37,13 @@ const RoleManagementPage: React.FC = () => {
   const { data: usersData, isLoading } = useQuery({
     queryKey: ["users", "all"],
     queryFn: () => roleService.getAllUsers(),
-    enabled:
-      user?.role === "super_admin" ||
-      user?.role === "admin" ||
-      user?.role === "manager",
+    enabled: user?.role === "admin",
   });
 
   const { data: roleStatsData } = useQuery({
     queryKey: ["roleStats"],
     queryFn: () => roleService.getRoleStats(),
-    enabled:
-      user?.role === "super_admin" ||
-      user?.role === "admin" ||
-      user?.role === "manager",
+    enabled: user?.role === "admin",
   });
 
   const updateRoleMutation = useMutation({
@@ -86,19 +80,13 @@ const RoleManagementPage: React.FC = () => {
   const roleStats = roleStatsData?.data?.data?.roleStats || [];
 
   const roleLabels = {
-    super_admin: "Super Admin",
     admin: "Admin",
     manager: "Manager",
-    viewer: "Viewer",
-    user: "User",
   };
 
   const roleColors = {
-    super_admin: "bg-red-100 text-red-800 border-red-200",
-    admin: "bg-purple-100 text-purple-800 border-purple-200",
+    admin: "bg-green-100 text-green-800 border-green-200",
     manager: "bg-blue-100 text-blue-800 border-blue-200",
-    viewer: "bg-gray-100 text-gray-800 border-gray-200",
-    user: "bg-green-100 text-green-800 border-green-200",
   };
 
   const handleRoleChange = (userId: string, newRole: string) => {
@@ -120,8 +108,8 @@ const RoleManagementPage: React.FC = () => {
       ? users
       : users.filter((u: User) => u.role === selectedRole);
 
-  // Only super_admin, admin, and manager can access this page
-  if (!["super_admin", "admin", "manager"].includes(user?.role || "")) {
+  // Only admin can access this page
+  if (user?.role !== "admin") {
     return (
       <div className="text-center py-12">
         <ShieldCheckIcon className="mx-auto h-12 w-12 text-gray-400" />
@@ -184,11 +172,8 @@ const RoleManagementPage: React.FC = () => {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="all">All Roles</option>
-            <option value="super_admin">Super Admin</option>
             <option value="admin">Admin</option>
             <option value="manager">Manager</option>
-            <option value="user">User</option>
-            <option value="viewer">Viewer</option>
           </select>
         </div>
       </div>
@@ -279,8 +264,7 @@ const RoleManagementPage: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
-                      {user?.role === "super_admin" ||
-                      user?.role === "admin" ? (
+                      {user?.role === "admin" ? (
                         <Button
                           variant="outline"
                           size="sm"
@@ -290,12 +274,10 @@ const RoleManagementPage: React.FC = () => {
                           Edit Role
                         </Button>
                       ) : null}
-                      {user?.role === "super_admin" &&
-                      userData._id !== user.id ? (
+                      {user?.role === "admin" && userData._id !== user.id ? (
                         <Button
                           variant="outline"
                           size="sm"
-                        
                           onClick={() => handleDeleteUser(userData._id)}
                           className="text-red-600 border-red-300 hover:bg-red-50"
                         >
@@ -335,16 +317,10 @@ const RoleManagementPage: React.FC = () => {
                         })
                       }
                       className="mr-3"
-                      disabled={
-                        (roleValue === "super_admin" &&
-                          user?.role !== "super_admin") ||
-                        editingUser._id === user?.id
-                      }
+                      disabled={editingUser._id === user?.id}
                     />
                     <span
                       className={`${
-                        (roleValue === "super_admin" &&
-                          user?.role !== "super_admin") ||
                         editingUser._id === user?.id
                           ? "text-gray-400"
                           : "text-gray-700"

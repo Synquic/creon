@@ -578,6 +578,18 @@ export const getProductAnalytics = async (productId: string, period = "7d") => {
   }
 };
 
+export const retestProducts = async () => {
+  console.log("🔄 Retesting user products");
+  try {
+    const response = await axiosInstance.post("/products/retest");
+    console.log("✅ Products retested successfully");
+    return response;
+  } catch (error) {
+    console.error("❌ Retest products error:", error);
+    throw error;
+  }
+};
+
 export const isAuthenticated = (): boolean => {
   const hasToken = !!localStorage.getItem("accessToken");
   console.log("🔍 Is authenticated:", hasToken);

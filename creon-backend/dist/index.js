@@ -15,6 +15,7 @@ const database_1 = __importDefault(require("./config/database"));
 const rateLimiting_1 = require("./middleware/rateLimiting");
 const auth_1 = __importDefault(require("./routes/auth"));
 const users_1 = __importDefault(require("./routes/users"));
+const subUsers_1 = __importDefault(require("./routes/subUsers"));
 const links_1 = __importDefault(require("./routes/links"));
 const products_1 = __importDefault(require("./routes/products"));
 const collections_1 = __importDefault(require("./routes/collections"));
@@ -28,6 +29,7 @@ const shopSettings_1 = __importDefault(require("./routes/shopSettings"));
 const dataParsing_1 = __importDefault(require("./routes/dataParsing"));
 const winston_1 = __importDefault(require("winston"));
 const winston_loki_1 = __importDefault(require("winston-loki"));
+const cronScheduler_1 = require("./jobs/cronScheduler");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -54,6 +56,7 @@ app.use("/uploads", express_1.default.static(path_1.default.join(__dirname, "../
 app.use(rateLimiting_1.generalLimiter);
 app.use("/api/auth", auth_1.default);
 app.use("/api/users", users_1.default);
+app.use("/api/sub-users", subUsers_1.default);
 app.use("/api/links", links_1.default);
 app.use("/api/products", products_1.default);
 app.use("/api/collections", collections_1.default);
@@ -102,5 +105,7 @@ app.listen(PORT, () => {
     exports.logger.info(`Creon API server started on port ${PORT}`);
     exports.logger.info(`Environment: ${process.env.NODE_ENV || "development"}`);
     exports.logger.info(`CORS Origin: ${process.env.CORS_ORIGIN || "http://localhost:5174"}`);
+    cronScheduler_1.cronScheduler.startAll();
+    exports.logger.info('Cron scheduler initialized');
 });
 //# sourceMappingURL=index.js.map

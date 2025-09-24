@@ -17,8 +17,11 @@ const ShortLinkRedirect: React.FC = () => {
         setIsLoading(false);
         return;
       }
-      // Redirect to the backend endpoint using env var or fallback to localhost
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
+      // Remove trailing slash and 'api/' if present from baseUrl
+      let baseUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
+      baseUrl = baseUrl.replace(/\/api\/?$/, ""); // remove trailing /api or /api/
+      baseUrl = baseUrl.replace(/\/$/, ""); // remove trailing slash if any
       window.location.href = `${baseUrl}/s/${shortCode}`;
     };
     // Add a small delay to show the loading state

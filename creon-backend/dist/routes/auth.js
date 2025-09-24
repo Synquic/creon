@@ -13,5 +13,6 @@ router.post('/logout', auth_1.authenticate, authController_1.logout);
 router.post('/logout-all', auth_1.authenticate, authController_1.logoutAll);
 router.get('/profile', auth_1.authenticate, authController_1.getProfile);
 router.get('/check-username/:username', authController_1.checkUsernameAvailability);
+router.post('/change-password', auth_1.authenticate, authController_1.changePassword);
 exports.default = router;
 //# sourceMappingURL=auth.js.map

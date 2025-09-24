@@ -3,9 +3,19 @@ import { Theme } from '../models/Theme';
 import { AuthRequest } from '../middleware/auth';
 import { logger } from '../index';
 
+// Helper function to get the effective user for profile operations
+const getEffectiveUserId = (user: any): string => {
+  // If user is a manager, return their parent's ID
+  if (user?.role === 'manager' && user?.parentUserId) {
+    return user.parentUserId;
+  }
+  // Otherwise return their own ID
+  return user?.id;
+};
+
 export const getUserTheme = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     let theme = await Theme.findOne({ userId });
     
@@ -30,7 +40,7 @@ export const getUserTheme = async (req: AuthRequest, res: Response): Promise<voi
 
 export const updateTheme = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
     const themeData = req.body;
 
     // Validate theme data
@@ -129,7 +139,7 @@ export const getPublicTheme = async (req: Request, res: Response): Promise<void>
 
 export const resetTheme = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     // Delete existing theme to reset to defaults
     await Theme.findOneAndDelete({ userId });

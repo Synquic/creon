@@ -5,6 +5,12 @@ const Analytics_1 = require("../models/Analytics");
 const Product_1 = require("../models/Product");
 const Link_1 = require("../models/Link");
 const index_1 = require("../index");
+const getEffectiveUserId = (user) => {
+    if (user.role === 'manager' && user.parentId) {
+        return user.parentId;
+    }
+    return user.id;
+};
 const trackEvent = async (req, res) => {
     try {
         const { type, linkId, productId, collectionId } = req.body;
@@ -65,32 +71,32 @@ const trackEvent = async (req, res) => {
 exports.trackEvent = trackEvent;
 const getDashboardAnalytics = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const effectiveUserId = getEffectiveUserId(req.user);
         const { period = '7d' } = req.query;
         const days = getDateRange(period);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
         const [totalClicks, totalUniqueVisitors, linkClicks, productClicks, profileViews] = await Promise.all([
             Analytics_1.Analytics.countDocuments({
-                userId,
+                userId: effectiveUserId,
                 timestamp: { $gte: startDate }
             }),
             Analytics_1.Analytics.distinct('ipAddress', {
-                userId,
+                userId: effectiveUserId,
                 timestamp: { $gte: startDate }
             }).then(ips => ips.length),
             Analytics_1.Analytics.countDocuments({
-                userId,
+                userId: effectiveUserId,
                 type: 'link_click',
                 timestamp: { $gte: startDate }
             }),
             Analytics_1.Analytics.countDocuments({
-                userId,
+                userId: effectiveUserId,
                 type: 'product_click',
                 timestamp: { $gte: startDate }
             }),
             Analytics_1.Analytics.countDocuments({
-                userId,
+                userId: effectiveUserId,
                 type: 'profile_view',
                 timestamp: { $gte: startDate }
             })
@@ -98,7 +104,7 @@ const getDashboardAnalytics = async (req, res) => {
         const dailyStats = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
-                    userId,
+                    userId: effectiveUserId,
                     timestamp: { $gte: startDate }
                 }
             },
@@ -132,7 +138,7 @@ const getDashboardAnalytics = async (req, res) => {
         const topLinks = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
-                    userId,
+                    userId: effectiveUserId,
                     type: 'link_click',
                     linkId: { $ne: null },
                     timestamp: { $gte: startDate }
@@ -175,7 +181,7 @@ const getDashboardAnalytics = async (req, res) => {
         const topProducts = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
-                    userId,
+                    userId: effectiveUserId,
                     type: 'product_click',
                     productId: { $ne: null },
                     timestamp: { $gte: startDate }
@@ -220,7 +226,7 @@ const getDashboardAnalytics = async (req, res) => {
         const deviceStats = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
-                    userId,
+                    userId: effectiveUserId,
                     timestamp: { $gte: startDate }
                 }
             },
@@ -237,7 +243,7 @@ const getDashboardAnalytics = async (req, res) => {
         const browserStats = await Analytics_1.Analytics.aggregate([
             {
                 $match: {
-                    userId,
+                    userId: effectiveUserId,
                     timestamp: { $gte: startDate }
                 }
             },
@@ -281,13 +287,13 @@ const getDashboardAnalytics = async (req, res) => {
 exports.getDashboardAnalytics = getDashboardAnalytics;
 const getLinkAnalytics = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const effectiveUserId = getEffectiveUserId(req.user);
         const { linkId } = req.params;
         const { period = '7d' } = req.query;
         const days = getDateRange(period);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
-        const link = await Link_1.Link.findOne({ _id: linkId, userId });
+        const link = await Link_1.Link.findOne({ _id: linkId, userId: effectiveUserId });
         if (!link) {
             res.status(404).json({
                 success: false,
@@ -362,13 +368,13 @@ const getLinkAnalytics = async (req, res) => {
 exports.getLinkAnalytics = getLinkAnalytics;
 const getProductAnalytics = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const effectiveUserId = getEffectiveUserId(req.user);
         const { productId } = req.params;
         const { period = '7d' } = req.query;
         const days = getDateRange(period);
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
-        const product = await Product_1.Product.findOne({ _id: productId, userId });
+        const product = await Product_1.Product.findOne({ _id: productId, userId: effectiveUserId });
         if (!product) {
             res.status(404).json({
                 success: false,

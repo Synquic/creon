@@ -8,4 +8,6 @@ export declare const deleteLink: (req: AuthRequest, res: Response) => Promise<vo
 export declare const reorderLinks: (req: Request, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const redirectLink: (req: Request, res: Response) => Promise<void>;
 export declare const getLinkAnalytics: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const retestLinks: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const retestAllLinks: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=linkController.d.ts.map

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.optionalAuth = exports.authorize = exports.authenticate = void 0;
+exports.requireParentUser = exports.optionalAuth = exports.authorize = exports.authenticate = void 0;
 const models_1 = require("../models");
 const jwt_1 = require("../utils/jwt");
 const authenticate = async (req, res, next) => {
@@ -26,7 +26,9 @@ const authenticate = async (req, res, next) => {
             id: user._id.toString(),
             username: user.username,
             email: user.email,
-            role: user.role
+            role: user.role,
+            userType: user.userType,
+            parentUserId: user.parentUserId
         };
         next();
     }
@@ -69,7 +71,9 @@ const optionalAuth = async (req, res, next) => {
                     id: user._id.toString(),
                     username: user.username,
                     email: user.email,
-                    role: user.role
+                    role: user.role,
+                    userType: user.userType,
+                    parentUserId: user.parentUserId
                 };
             }
         }
@@ -80,4 +84,22 @@ const optionalAuth = async (req, res, next) => {
     }
 };
 exports.optionalAuth = optionalAuth;
+const requireParentUser = (req, res, next) => {
+    if (!req.user) {
+        res.status(401).json({
+            success: false,
+            message: 'Authentication required'
+        });
+        return;
+    }
+    if (req.user.userType !== 'parent') {
+        res.status(403).json({
+            success: false,
+            message: 'Access denied. Only parent users can access this resource.'
+        });
+        return;
+    }
+    next();
+};
+exports.requireParentUser = requireParentUser;
 //# sourceMappingURL=auth.js.map

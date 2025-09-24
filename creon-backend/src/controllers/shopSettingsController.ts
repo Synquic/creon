@@ -3,11 +3,19 @@ import { AuthRequest } from '../middleware/auth';
 import ShopSettings from '../models/ShopSettings';
 import { logger } from '../index';
 
+// Helper function to get the effective user ID (parent for managers, self for admins)
+const getEffectiveUserId = (user: any): string => {
+  if (user.role === 'manager' && user.parentId) {
+    return user.parentId;
+  }
+  return user.id;
+};
+
 export const getShopSettings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const effectiveUserId = getEffectiveUserId(req.user);
     
-    if (!userId) {
+    if (!effectiveUserId) {
       res.status(401).json({
         success: false,
         message: 'User not authenticated'
@@ -15,12 +23,12 @@ export const getShopSettings = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    let shopSettings = await ShopSettings.findOne({ userId });
+    let shopSettings = await ShopSettings.findOne({ userId: effectiveUserId });
     
     if (!shopSettings) {
       // Create default shop settings if none exist
       shopSettings = await ShopSettings.create({
-        userId,
+        userId: effectiveUserId,
         isVisible: false,
         title: 'Shop',
         isMainTab: false
@@ -44,10 +52,10 @@ export const getShopSettings = async (req: AuthRequest, res: Response): Promise<
 
 export const updateShopSettings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const effectiveUserId = getEffectiveUserId(req.user);
     const updateData = req.body;
 
-    if (!userId) {
+    if (!effectiveUserId) {
       res.status(401).json({
         success: false,
         message: 'User not authenticated'
@@ -66,7 +74,7 @@ export const updateShopSettings = async (req: AuthRequest, res: Response): Promi
     }
 
     const shopSettings = await ShopSettings.findOneAndUpdate(
-      { userId },
+      { userId: effectiveUserId },
       filteredData,
       { new: true, upsert: true, runValidators: true }
     );

@@ -73,8 +73,27 @@ const userSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      enum: ["super_admin", "admin", "manager", "viewer", "user"],
-      default: "user",
+      enum: ["admin", "manager"],
+      default: "admin",
+    },
+    userType: {
+      type: String,
+      enum: ["parent", "sub"],
+      default: "parent",
+    },
+    parentUserId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    isFirstLogin: {
+      type: Boolean,
+      default: false,
     },
     isEmailVerified: {
       type: Boolean,

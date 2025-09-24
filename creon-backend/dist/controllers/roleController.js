@@ -5,17 +5,17 @@ const User_1 = require("../models/User");
 const index_1 = require("../index");
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User_1.User.find({}, '-password').sort({ createdAt: -1 });
+        const users = await User_1.User.find({}, "-password").sort({ createdAt: -1 });
         res.json({
             success: true,
-            data: { users }
+            data: { users },
         });
     }
     catch (error) {
-        index_1.logger.error('Get all users error:', error);
+        index_1.logger.error("Get all users error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -25,18 +25,18 @@ const updateUserRole = async (req, res) => {
         const { userId } = req.params;
         const { role } = req.body;
         const requestingUserId = req.user?.id;
-        const validRoles = ['super_admin', 'admin', 'manager', 'viewer', 'user'];
+        const validRoles = ["admin", "manager"];
         if (!validRoles.includes(role)) {
             res.status(400).json({
                 success: false,
-                message: 'Invalid role specified'
+                message: "Invalid role specified",
             });
             return;
         }
         if (userId === requestingUserId) {
             res.status(400).json({
                 success: false,
-                message: 'Cannot change your own role'
+                message: "Cannot change your own role",
             });
             return;
         }
@@ -44,29 +44,29 @@ const updateUserRole = async (req, res) => {
         if (!targetUser) {
             res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found",
             });
             return;
         }
-        if (targetUser.role === 'super_admin' && req.user?.role !== 'super_admin') {
+        if (req.user?.role !== "admin") {
             res.status(403).json({
                 success: false,
-                message: 'Only super admins can change super admin roles'
+                message: "Only admins can change user roles",
             });
             return;
         }
-        const updatedUser = await User_1.User.findByIdAndUpdate(userId, { role }, { new: true }).select('-password');
+        const updatedUser = await User_1.User.findByIdAndUpdate(userId, { role }, { new: true }).select("-password");
         res.json({
             success: true,
-            message: 'User role updated successfully',
-            data: { user: updatedUser }
+            message: "User role updated successfully",
+            data: { user: updatedUser },
         });
     }
     catch (error) {
-        index_1.logger.error('Update user role error:', error);
+        index_1.logger.error("Update user role error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -74,25 +74,30 @@ exports.updateUserRole = updateUserRole;
 const getUsersByRole = async (req, res) => {
     try {
         const { role } = req.params;
-        const validRoles = ['super_admin', 'admin', 'manager', 'viewer', 'user'];
+        const validRoles = [
+            "admin",
+            "manager",
+        ];
         if (!validRoles.includes(role)) {
             res.status(400).json({
                 success: false,
-                message: 'Invalid role specified'
+                message: "Invalid role specified",
             });
             return;
         }
-        const users = await User_1.User.find({ role }, '-password').sort({ createdAt: -1 });
+        const users = await User_1.User.find({ role }, "-password").sort({
+            createdAt: -1,
+        });
         res.json({
             success: true,
-            data: { users, role }
+            data: { users, role },
         });
     }
     catch (error) {
-        index_1.logger.error('Get users by role error:', error);
+        index_1.logger.error("Get users by role error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -102,28 +107,28 @@ const getRoleStats = async (req, res) => {
         const roleStats = await User_1.User.aggregate([
             {
                 $group: {
-                    _id: '$role',
-                    count: { $sum: 1 }
-                }
+                    _id: "$role",
+                    count: { $sum: 1 },
+                },
             },
             {
-                $sort: { count: -1 }
-            }
+                $sort: { count: -1 },
+            },
         ]);
         const totalUsers = await User_1.User.countDocuments();
         res.json({
             success: true,
             data: {
                 roleStats,
-                totalUsers
-            }
+                totalUsers,
+            },
         });
     }
     catch (error) {
-        index_1.logger.error('Get role stats error:', error);
+        index_1.logger.error("Get role stats error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };
@@ -135,7 +140,7 @@ const deleteUser = async (req, res) => {
         if (userId === requestingUserId) {
             res.status(400).json({
                 success: false,
-                message: 'Cannot delete your own account'
+                message: "Cannot delete your own account",
             });
             return;
         }
@@ -143,28 +148,28 @@ const deleteUser = async (req, res) => {
         if (!targetUser) {
             res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: "User not found",
             });
             return;
         }
-        if (targetUser.role === 'super_admin' && req.user?.role !== 'super_admin') {
+        if (req.user?.role !== "admin") {
             res.status(403).json({
                 success: false,
-                message: 'Only super admins can delete super admin accounts'
+                message: "Only admins can delete user accounts",
             });
             return;
         }
         await User_1.User.findByIdAndDelete(userId);
         res.json({
             success: true,
-            message: 'User deleted successfully'
+            message: "User deleted successfully",
         });
     }
     catch (error) {
-        index_1.logger.error('Delete user error:', error);
+        index_1.logger.error("Delete user error:", error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: "Internal server error",
         });
     }
 };

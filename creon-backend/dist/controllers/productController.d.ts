@@ -7,4 +7,6 @@ export declare const updateProduct: (req: AuthRequest, res: Response) => Promise
 export declare const deleteProduct: (req: AuthRequest, res: Response) => Promise<void>;
 export declare const redirectProduct: (req: Request, res: Response) => Promise<void>;
 export declare const getProductAnalytics: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const retestProducts: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const retestAllProducts: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=productController.d.ts.map

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/utils/providers";
+import { APP_CONFIG } from "@/config/app";
 
 export const metadata: Metadata = {
-  title: "Creon - Synquic",
-  description:
-    "Your Links,Your Story, Creon create a stunning bio page that showcases all your links, products, and social media in one place. Built for creators, businesses, and influencers who want to make an impact.",
+  title: `${APP_CONFIG.name} - ${APP_CONFIG.tagline}`,
+  description: APP_CONFIG.description,
 };
 
 export default function RootLayout({

@@ -1,10 +1,10 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth';
 
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'viewer' | 'user';
+export type UserRole = 'admin' | 'manager';
 
 // Role hierarchy - higher index means more permissions
-const ROLE_HIERARCHY: UserRole[] = ['viewer', 'user', 'manager', 'admin', 'super_admin'];
+const ROLE_HIERARCHY: UserRole[] = ['admin', 'manager'];
 
 /**
  * Check if user has required role or higher
@@ -41,19 +41,46 @@ export const requireRole = (requiredRole: UserRole) => {
 };
 
 /**
- * Check if user can perform actions on resources they own
+ * Check if user can perform actions on resources they own OR if they're a manager managing their parent's profile
  */
 export const canAccessOwnResource = (req: AuthRequest, resourceUserId: string): boolean => {
   const userRole = req.user?.role as UserRole;
   const userId = req.user?.id;
+  const parentUserId = req.user?.parentUserId;
   
-  // Super admin and admin can access any resource
+  // Admin can access any resource
   if (hasRole(userRole, 'admin')) {
     return true;
   }
   
-  // Users can only access their own resources
+  // Manager can access their parent's resources (for profile management)
+  if (userRole === 'manager' && parentUserId && parentUserId === resourceUserId) {
+    return true;
+  }
+  
+  // Users can access their own resources
   return userId === resourceUserId;
+};
+
+/**
+ * Check if user can manage profile (own profile or manager managing parent's profile)
+ */
+export const canManageProfile = (req: AuthRequest, targetUserId: string): boolean => {
+  const userRole = req.user?.role as UserRole;
+  const userId = req.user?.id;
+  const parentUserId = req.user?.parentUserId;
+  
+  // Admin can manage any profile
+  if (userRole === 'admin' && userId === targetUserId) {
+    return true;
+  }
+  
+  // Manager can manage their parent's profile
+  if (userRole === 'manager' && parentUserId && parentUserId === targetUserId) {
+    return true;
+  }
+  
+  return false;
 };
 
 /**
@@ -90,33 +117,37 @@ export const requireOwnershipOrAdmin = (getUserIdFromResource: (req: AuthRequest
 
 // Permission definitions for different operations
 export const PERMISSIONS = {
-  // User management
+  // User management - only admins can manage users
   CREATE_USER: 'admin',
-  DELETE_USER: 'super_admin',
+  DELETE_USER: 'admin',
   MANAGE_USERS: 'admin',
-  VIEW_ALL_USERS: 'manager',
+  VIEW_ALL_USERS: 'admin',
   
-  // Content management
-  CREATE_CONTENT: 'user',
-  EDIT_CONTENT: 'user',
-  DELETE_CONTENT: 'user',
-  VIEW_CONTENT: 'viewer',
+  // Content management - managers can manage parent's content
+  CREATE_CONTENT: 'manager',
+  EDIT_CONTENT: 'manager',
+  DELETE_CONTENT: 'manager',
+  VIEW_CONTENT: 'manager',
   
-  // Analytics and reporting
-  VIEW_ANALYTICS: 'user',
+  // Analytics and reporting - managers can view parent's analytics
+  VIEW_ANALYTICS: 'manager',
   VIEW_ALL_ANALYTICS: 'manager',
   
-  // System management
-  SYSTEM_SETTINGS: 'super_admin',
-  MANAGE_ROLES: 'super_admin',
+  // Profile management - managers can manage parent's profile
+  MANAGE_PROFILE: 'manager',
+  VIEW_PROFILE: 'manager',
   
-  // Shop management
-  MANAGE_SHOP: 'user',
-  VIEW_SHOP: 'viewer',
+  // System management - managers can manage app/profile settings
+  SYSTEM_SETTINGS: 'manager',
+  MANAGE_ROLES: 'admin', // Only admins can manage roles
   
-  // Theme management
-  MANAGE_THEME: 'user',
-  VIEW_THEME: 'viewer'
+  // Shop management - managers can manage parent's shop
+  MANAGE_SHOP: 'manager',
+  VIEW_SHOP: 'manager',
+  
+  // Theme management - managers can manage parent's theme
+  MANAGE_THEME: 'manager',
+  VIEW_THEME: 'manager'
 } as const;
 
 /**
@@ -159,5 +190,6 @@ export default {
   hasRole,
   hasPermission,
   canAccessOwnResource,
+  canManageProfile,
   PERMISSIONS
 };

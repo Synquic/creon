@@ -42,6 +42,14 @@ const linkSchema = new Schema<ILink>({
     type: Boolean,
     default: true
   },
+  isWorking: {
+    type: Boolean,
+    default: true
+  },
+  lastTested: {
+    type: Date,
+    default: null
+  },
   clickCount: {
     type: Number,
     default: 0,

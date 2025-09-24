@@ -8,6 +8,8 @@ export interface AuthRequest extends Request {
     username: string;
     email: string;
     role: string;
+    userType: string;
+    parentUserId?: string;
   };
 }
 
@@ -42,7 +44,9 @@ export const authenticate = async (
       id: (user._id as any).toString(),
       username: user.username,
       email: user.email,
-      role: user.role
+      role: user.role,
+      userType: user.userType,
+      parentUserId: user.parentUserId
     };
 
     next();
@@ -93,7 +97,9 @@ export const optionalAuth = async (
           id: (user._id as any).toString(),
           username: user.username,
           email: user.email,
-          role: user.role
+          role: user.role,
+          userType: user.userType,
+          parentUserId: user.parentUserId
         };
       }
     }
@@ -102,4 +108,28 @@ export const optionalAuth = async (
   } catch (error) {
     next();
   }
+};
+
+export const requireParentUser = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      message: 'Authentication required'
+    });
+    return;
+  }
+
+  if (req.user.userType !== 'parent') {
+    res.status(403).json({
+      success: false,
+      message: 'Access denied. Only parent users can access this resource.'
+    });
+    return;
+  }
+
+  next();
 };

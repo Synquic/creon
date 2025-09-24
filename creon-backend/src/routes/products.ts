@@ -5,7 +5,9 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
-  getProductAnalytics
+  getProductAnalytics,
+  retestProducts,
+  retestAllProducts
 } from '../controllers/productController';
 import { authenticate } from '../middleware/auth';
 import { createLimiter } from '../middleware/rateLimiting';
@@ -39,5 +41,9 @@ router.put('/:id', updateProduct);
 router.delete('/:id', deleteProduct);
 
 router.get('/:id/analytics', getProductAnalytics);
+
+router.post('/retest', retestProducts);
+
+router.post('/retest-all', retestAllProducts);
 
 export default router;

@@ -163,7 +163,7 @@ const ProfilePage: React.FC = () => {
                       user.profileImage.startsWith("http")
                         ? user.profileImage
                         : `${
-                            process.env.API_BASE_URL ||
+                            process.env.NEXT_PUBLIC_API_BASE_URL ||
                             "http://localhost:5001"
                           }${user.profileImage}`
                     }

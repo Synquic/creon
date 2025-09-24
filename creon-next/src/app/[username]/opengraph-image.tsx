@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og";
-import { authService } from "@/services/auth";
 
 // Image metadata
 export const size = {
@@ -24,11 +23,17 @@ export default async function Image({
   const { username } = params;
   console.log("OpenGraph Image: Generating for username:", username);
 
-  //Fetch user data from API
+  // Fetch user data from API using fetch
   let userData;
   try {
-    userData = await authService.getUserProfile(username);
-    // console.log("Fetched user data:", userData.data?.data);
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}users/${username}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) {
+      throw new Error(`Failed to fetch user profile: ${res.status}`);
+    }
+    userData = await res.json();
   } catch (error) {
     console.error("Failed to fetch user data:", error);
     userData = {
@@ -47,7 +52,7 @@ export default async function Image({
   }
 
   // // Extract user information
-  const user = userData?.data?.data?.user;
+  const user = userData?.data?.user;
   console.log("User data for OG image:", user);
 
   // Default values in case user data is not available

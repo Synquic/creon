@@ -1,4 +1,6 @@
+import { body, param, query } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
+export { body, param, query };
 export declare const handleValidationErrors: (req: Request, res: Response, next: NextFunction) => void;
 export declare const registerValidation: import("express-validator").ValidationChain[];
 export declare const loginValidation: import("express-validator").ValidationChain[];

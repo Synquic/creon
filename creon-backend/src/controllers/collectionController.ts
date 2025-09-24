@@ -3,10 +3,20 @@ import { ProductCollection, Product } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { logger } from '../index';
 
+// Helper function to get the effective user for profile operations
+const getEffectiveUserId = (user: any): string => {
+  // If user is a manager, return their parent's ID
+  if (user?.role === 'manager' && user?.parentUserId) {
+    return user.parentUserId;
+  }
+  // Otherwise return their own ID
+  return user?.id;
+};
+
 export const createCollection = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { title, description, image, products = [] } = req.body;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     if (products.length > 0) {
       const existingProducts = await Product.find({
@@ -58,7 +68,7 @@ export const createCollection = async (req: AuthRequest, res: Response): Promise
 
 export const getCollections = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
     const { page = 1, limit = 20, sortBy = 'order', sortOrder = 'asc' } = req.query;
 
     const pageNum = parseInt(page as string);
@@ -101,7 +111,7 @@ export const getCollections = async (req: AuthRequest, res: Response): Promise<v
 export const getCollectionById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     const collection = await ProductCollection.findOne({ _id: id, userId })
       .populate('products');
@@ -130,7 +140,7 @@ export const getCollectionById = async (req: AuthRequest, res: Response): Promis
 export const updateCollection = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
     const { title, description, image, products, isActive, order } = req.body;
     
     let updateData: any = { title, description, image, isActive };
@@ -204,7 +214,7 @@ export const updateCollection = async (req: AuthRequest, res: Response): Promise
 export const deleteCollection = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     const collection = await ProductCollection.findOneAndDelete({ _id: id, userId });
 
@@ -237,7 +247,7 @@ export const deleteCollection = async (req: AuthRequest, res: Response): Promise
 export const reorderCollections = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { collectionOrders } = req.body;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     if (!Array.isArray(collectionOrders)) {
       res.status(400).json({
@@ -273,7 +283,7 @@ export const addProductToCollection = async (req: AuthRequest, res: Response): P
   try {
     const { id } = req.params;
     const { productId } = req.body;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     const [collection, product] = await Promise.all([
       ProductCollection.findOne({ _id: id, userId }),
@@ -326,7 +336,7 @@ export const addProductToCollection = async (req: AuthRequest, res: Response): P
 export const removeProductFromCollection = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id, productId } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     const [collection, product] = await Promise.all([
       ProductCollection.findOne({ _id: id, userId }),

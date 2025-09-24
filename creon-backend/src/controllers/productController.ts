@@ -3,6 +3,17 @@ import { Product, ProductCollection, Analytics } from '../models';
 import { AuthRequest } from '../middleware/auth';
 import { generateUniqueShortCode, isValidShortCode } from '../utils/shortCode';
 import { logger } from '../index';
+import { LinkTester } from '../jobs/testLinks';
+
+// Helper function to get the effective user for profile operations
+const getEffectiveUserId = (user: any): string => {
+  // If user is a manager, return their parent's ID
+  if (user?.role === 'manager' && user?.parentUserId) {
+    return user.parentUserId;
+  }
+  // Otherwise return their own ID
+  return user?.id;
+};
 
 const checkProductShortCodeUnique = async (code: string): Promise<boolean> => {
   const existing = await Product.findOne({ shortCode: code });
@@ -22,7 +33,7 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
       tags = [],
       collectionId
     } = req.body;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     let finalShortCode = shortCode;
 
@@ -98,7 +109,7 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
 
 export const getProducts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
     const { 
       page = 1, 
       limit = 20, 
@@ -159,7 +170,7 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
 export const getProductById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     const product = await Product.findOne({ _id: id, userId })
       .populate('collectionId', 'title');
@@ -188,7 +199,7 @@ export const getProductById = async (req: AuthRequest, res: Response): Promise<v
 export const updateProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
     const {
       title,
       description,
@@ -279,7 +290,7 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
 export const deleteProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
 
     const product = await Product.findOneAndDelete({ _id: id, userId });
 
@@ -354,7 +365,7 @@ export const redirectProduct = async (req: Request, res: Response): Promise<void
 export const getProductAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const userId = req.user?.id;
+    const userId = getEffectiveUserId(req.user);
     const { period = '7d' } = req.query;
 
     const product = await Product.findOne({ _id: id, userId });
@@ -403,6 +414,81 @@ export const getProductAnalytics = async (req: AuthRequest, res: Response): Prom
     res.status(500).json({
       success: false,
       message: 'Internal server error'
+    });
+  }
+};
+
+export const retestProducts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = getEffectiveUserId(req.user);
+    
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+      return;
+    }
+    
+    logger.info(`Manual product retest requested by user: ${userId}`);
+
+    // Test products for the specific user
+    const results = await LinkTester.testLinksForUser(userId);
+    
+    // Filter results to only include products
+    const productResults = results.filter(r => r.itemType === 'product');
+    
+    // Get updated stats
+    const stats = await LinkTester.getLinkTestStats();
+
+    res.json({
+      success: true,
+      message: 'Product testing completed successfully',
+      data: {
+        tested: productResults.length,
+        working: productResults.filter(r => r.isWorking).length,
+        notWorking: productResults.filter(r => !r.isWorking).length,
+        results: productResults,
+        stats: stats.products,
+      }
+    });
+  } catch (error) {
+    logger.error('Retest products error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to test products'
+    });
+  }
+};
+
+export const retestAllProducts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    logger.info('Manual retest of all products requested');
+
+    // Test all links and products in the system
+    const results = await LinkTester.testAllLinks();
+    
+    // Filter results to only include products
+    const productResults = results.filter(r => r.itemType === 'product');
+    
+    // Get updated stats
+    const stats = await LinkTester.getLinkTestStats();
+
+    res.json({
+      success: true,
+      message: 'All products testing completed successfully',
+      data: {
+        tested: productResults.length,
+        working: productResults.filter(r => r.isWorking).length,
+        notWorking: productResults.filter(r => !r.isWorking).length,
+        stats: stats.products,
+      }
+    });
+  } catch (error) {
+    logger.error('Retest all products error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to test all products'
     });
   }
 };

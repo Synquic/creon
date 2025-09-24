@@ -10,6 +10,7 @@ import { generalLimiter } from "./middleware/rateLimiting";
 
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
+import subUserRoutes from "./routes/subUsers";
 import linkRoutes from "./routes/links";
 import productRoutes from "./routes/products";
 import collectionRoutes from "./routes/collections";
@@ -23,6 +24,7 @@ import shopSettingsRoutes from "./routes/shopSettings";
 import dataParsingRoutes from "./routes/dataParsing";
 import winston from "winston";
 import LokiTransport from "winston-loki";
+import { cronScheduler } from "./jobs/cronScheduler";
 dotenv.config();
 
 const app = express();
@@ -64,6 +66,7 @@ app.use(generalLimiter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/sub-users", subUserRoutes);
 app.use("/api/links", linkRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/collections", collectionRoutes);
@@ -126,4 +129,8 @@ app.listen(PORT, () => {
   logger.info(
     `CORS Origin: ${process.env.CORS_ORIGIN || "http://localhost:5174"}`
   );
+  
+  // Start cron jobs
+  cronScheduler.startAll();
+  logger.info('Cron scheduler initialized');
 });

@@ -13,5 +13,7 @@ router.get('/:id', productController_1.getProductById);
 router.put('/:id', productController_1.updateProduct);
 router.delete('/:id', productController_1.deleteProduct);
 router.get('/:id/analytics', productController_1.getProductAnalytics);
+router.post('/retest', productController_1.retestProducts);
+router.post('/retest-all', productController_1.retestAllProducts);
 exports.default = router;
 //# sourceMappingURL=products.js.map

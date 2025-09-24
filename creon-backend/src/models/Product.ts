@@ -66,6 +66,14 @@ const productSchema = new Schema<IProduct>(
       type: Boolean,
       default: true,
     },
+    isWorking: {
+      type: Boolean,
+      default: true,
+    },
+    lastTested: {
+      type: Date,
+      default: null,
+    },
     tags: [
       {
         type: String,

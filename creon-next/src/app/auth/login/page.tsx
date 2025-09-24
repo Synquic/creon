@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+// import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -13,6 +13,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import Card from "@/components/ui/card";
+import { APP_CONFIG } from "@/config/app";
 
 const loginSchema = z.object({
   identifier: z.string().min(1, "Username or email is required"),
@@ -44,7 +45,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-violet-50 to-pink-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -53,8 +54,14 @@ const LoginPage: React.FC = () => {
       >
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <img src="/logo.png" alt="Creon Logo" className="w-12 h-12" />
-            <span className="text-3xl font-bold gradient-text">Creon</span>
+            <img
+              src={APP_CONFIG.logo.src}
+              alt={APP_CONFIG.logo.alt}
+              className="w-12 h-12"
+            />
+            <span className="text-3xl font-bold gradient-text">
+              {APP_CONFIG.name}
+            </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Welcome back!
@@ -101,24 +108,25 @@ const LoginPage: React.FC = () => {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Don&apos;t have an account?{" "}
+              {/* Don&apos;t have an account?{" "}
               <Link
                 href="/auth/register"
-                className="text-green-600 hover:text-green-700 font-medium"
+                className="text-purple-600 hover:text-purple-700 font-medium"
               >
                 Sign up
-              </Link>
+              </Link> */}
+              Contact administrator for account setup.
             </p>
           </div>
         </Card>
 
         <div className="mt-8 text-center text-sm text-gray-500">
           By signing in, you agree to our{" "}
-          <a href="#" className="text-green-600 hover:text-green-700">
+          <a href="#" className="text-purple-600 hover:text-purple-700">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="#" className="text-green-600 hover:text-green-700">
+          <a href="#" className="text-purple-600 hover:text-purple-700">
             Privacy Policy
           </a>
         </div>

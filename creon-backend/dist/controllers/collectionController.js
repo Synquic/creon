@@ -3,10 +3,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.removeProductFromCollection = exports.addProductToCollection = exports.reorderCollections = exports.deleteCollection = exports.updateCollection = exports.getCollectionById = exports.getCollections = exports.createCollection = void 0;
 const models_1 = require("../models");
 const index_1 = require("../index");
+const getEffectiveUserId = (user) => {
+    if (user?.role === 'manager' && user?.parentUserId) {
+        return user.parentUserId;
+    }
+    return user?.id;
+};
 const createCollection = async (req, res) => {
     try {
         const { title, description, image, products = [] } = req.body;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         if (products.length > 0) {
             const existingProducts = await models_1.Product.find({
                 _id: { $in: products },
@@ -50,7 +56,7 @@ const createCollection = async (req, res) => {
 exports.createCollection = createCollection;
 const getCollections = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const { page = 1, limit = 20, sortBy = 'order', sortOrder = 'asc' } = req.query;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
@@ -90,7 +96,7 @@ exports.getCollections = getCollections;
 const getCollectionById = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const collection = await models_1.ProductCollection.findOne({ _id: id, userId })
             .populate('products');
         if (!collection) {
@@ -117,7 +123,7 @@ exports.getCollectionById = getCollectionById;
 const updateCollection = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const { title, description, image, products, isActive, order } = req.body;
         let updateData = { title, description, image, isActive };
         if (order !== undefined) {
@@ -172,7 +178,7 @@ exports.updateCollection = updateCollection;
 const deleteCollection = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const collection = await models_1.ProductCollection.findOneAndDelete({ _id: id, userId });
         if (!collection) {
             res.status(404).json({
@@ -199,7 +205,7 @@ exports.deleteCollection = deleteCollection;
 const reorderCollections = async (req, res) => {
     try {
         const { collectionOrders } = req.body;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         if (!Array.isArray(collectionOrders)) {
             res.status(400).json({
                 success: false,
@@ -227,7 +233,7 @@ const addProductToCollection = async (req, res) => {
     try {
         const { id } = req.params;
         const { productId } = req.body;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const [collection, product] = await Promise.all([
             models_1.ProductCollection.findOne({ _id: id, userId }),
             models_1.Product.findOne({ _id: productId, userId })
@@ -274,7 +280,7 @@ exports.addProductToCollection = addProductToCollection;
 const removeProductFromCollection = async (req, res) => {
     try {
         const { id, productId } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const [collection, product] = await Promise.all([
             models_1.ProductCollection.findOne({ _id: id, userId }),
             models_1.Product.findOne({ _id: productId, userId })

@@ -36,6 +36,8 @@ interface Product {
   clickCount: number;
   isActive: boolean;
   collectionId?: string;
+  isWorking?: boolean;
+  lastTested?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -86,6 +88,7 @@ const ProductsPageNew: React.FC = () => {
   const [url, setUrl] = useState("");
   const [parsing, setParsing] = useState(false);
   const [pendingParsedData, setPendingParsedData] = useState<any>(null);
+  const [retesting, setRetesting] = useState(false);
 
   const {
     data: productsData,
@@ -166,6 +169,22 @@ const ProductsPageNew: React.FC = () => {
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to upload image");
       setUploadingImage(false);
+    },
+  });
+
+  const retestProductsMutation = useMutation({
+    mutationFn: simpleApi.retestProducts,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      const { tested, working, notWorking } = response.data.data;
+      toast.success(
+        `Tested ${tested} products: ${working} working, ${notWorking} not working`
+      );
+      setRetesting(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to test products");
+      setRetesting(false);
     },
   });
 
@@ -342,6 +361,11 @@ const ProductsPageNew: React.FC = () => {
     uploadImageMutation.mutate(file);
   };
 
+  const handleRetestProducts = async () => {
+    setRetesting(true);
+    retestProductsMutation.mutate();
+  };
+
   const cancelForm = () => {
     setShowCreateForm(false);
     setEditingProduct(null);
@@ -420,10 +444,24 @@ const ProductsPageNew: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Products</h1>
-          <p className="text-gray-600">
-            Manage your products and affiliate links
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Products</h1>
+              <p className="text-gray-600">
+                Manage your products and affiliate links
+              </p>
+            </div>
+            {products.length > 0 && (
+              <Button
+                onClick={handleRetestProducts}
+                isLoading={retesting}
+                variant="outline"
+                size="sm"
+              >
+                {retesting ? "Testing..." : "Test All Products"}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Add Product Button */}
@@ -653,7 +691,9 @@ const ProductsPageNew: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group"
+                className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group relative ${
+                  product.isWorking === false ? "blur-[2px] opacity-60" : ""
+                }`}
               >
                 {/* Product Image */}
                 <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
@@ -692,7 +732,14 @@ const ProductsPageNew: React.FC = () => {
                       <ChartBarIcon className="w-4 h-4" />
                       <span>{product.clickCount} clicks</span>
                     </span>
-                    <span className="font-mono">/{product.shortCode}</span>
+                    <div className="flex items-center space-x-2">
+                      {product.isWorking === false && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          Not Working
+                        </span>
+                      )}
+                      <span className="font-mono">/{product.shortCode}</span>
+                    </div>
                   </div>
 
                   {/* Actions */}
@@ -760,6 +807,15 @@ const ProductsPageNew: React.FC = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Broken Link Overlay */}
+                {product.isWorking === false && (
+                  <div className="absolute inset-0 bg-red-500/10 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium border border-red-200">
+                      Affiliate URL Not Working
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>

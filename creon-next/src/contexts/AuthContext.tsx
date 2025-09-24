@@ -16,7 +16,9 @@ interface User {
   lastName?: string;
   bio?: string;
   profileImage?: string;
-  role: "super_admin" | "admin" | "manager" | "viewer" | "user";
+  role: "admin" | "manager";
+  userType: "parent" | "sub";
+  parentUserId?: string;
   socialLinks: {
     instagram?: string;
     twitter?: string;

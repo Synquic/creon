@@ -1,38 +1,44 @@
-import { Request, Response } from 'express';
-import { User } from '../models/User';
-import { AuthRequest } from '../middleware/auth';
-import { UserRole } from '../middleware/rbac';
-import { logger } from '../index';
+import { Request, Response } from "express";
+import { User } from "../models/User";
+import { AuthRequest } from "../middleware/auth";
+import { UserRole } from "../middleware/rbac";
+import { logger } from "../index";
 
-export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAllUsers = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
-    const users = await User.find({}, '-password').sort({ createdAt: -1 });
-    
+    const users = await User.find({}, "-password").sort({ createdAt: -1 });
+
     res.json({
       success: true,
-      data: { users }
+      data: { users },
     });
   } catch (error) {
-    logger.error('Get all users error:', error);
+    logger.error("Get all users error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const updateUserRole = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateUserRole = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { userId } = req.params;
     const { role } = req.body;
     const requestingUserId = req.user?.id;
 
     // Validate role
-    const validRoles: UserRole[] = ['super_admin', 'admin', 'manager', 'viewer', 'user'];
+    const validRoles: UserRole[] = ["admin", "manager"];
     if (!validRoles.includes(role)) {
       res.status(400).json({
         success: false,
-        message: 'Invalid role specified'
+        message: "Invalid role specified",
       });
       return;
     }
@@ -41,7 +47,7 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
     if (userId === requestingUserId) {
       res.status(400).json({
         success: false,
-        message: 'Cannot change your own role'
+        message: "Cannot change your own role",
       });
       return;
     }
@@ -51,16 +57,16 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
     if (!targetUser) {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
       return;
     }
 
-    // Prevent demotion of other super admins (only super admin can do this)
-    if (targetUser.role === 'super_admin' && req.user?.role !== 'super_admin') {
+    // Only admins can change other users' roles
+    if (req.user?.role !== "admin") {
       res.status(403).json({
         success: false,
-        message: 'Only super admins can change super admin roles'
+        message: "Only admins can change user roles",
       });
       return;
     }
@@ -70,84 +76,97 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
       userId,
       { role },
       { new: true }
-    ).select('-password');
+    ).select("-password");
 
     res.json({
       success: true,
-      message: 'User role updated successfully',
-      data: { user: updatedUser }
+      message: "User role updated successfully",
+      data: { user: updatedUser },
     });
-
   } catch (error) {
-    logger.error('Update user role error:', error);
+    logger.error("Update user role error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const getUsersByRole = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getUsersByRole = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { role } = req.params;
-    
-    const validRoles: UserRole[] = ['super_admin', 'admin', 'manager', 'viewer', 'user'];
+
+    const validRoles: UserRole[] = [
+      "admin",
+      "manager",
+    ];
     if (!validRoles.includes(role as UserRole)) {
       res.status(400).json({
         success: false,
-        message: 'Invalid role specified'
+        message: "Invalid role specified",
       });
       return;
     }
 
-    const users = await User.find({ role }, '-password').sort({ createdAt: -1 });
-    
+    const users = await User.find({ role }, "-password").sort({
+      createdAt: -1,
+    });
+
     res.json({
       success: true,
-      data: { users, role }
+      data: { users, role },
     });
   } catch (error) {
-    logger.error('Get users by role error:', error);
+    logger.error("Get users by role error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const getRoleStats = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getRoleStats = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const roleStats = await User.aggregate([
       {
         $group: {
-          _id: '$role',
-          count: { $sum: 1 }
-        }
+          _id: "$role",
+          count: { $sum: 1 },
+        },
       },
       {
-        $sort: { count: -1 }
-      }
+        $sort: { count: -1 },
+      },
     ]);
 
     const totalUsers = await User.countDocuments();
-    
+
     res.json({
       success: true,
-      data: { 
+      data: {
         roleStats,
-        totalUsers
-      }
+        totalUsers,
+      },
     });
   } catch (error) {
-    logger.error('Get role stats error:', error);
+    logger.error("Get role stats error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deleteUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { userId } = req.params;
     const requestingUserId = req.user?.id;
@@ -156,7 +175,7 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
     if (userId === requestingUserId) {
       res.status(400).json({
         success: false,
-        message: 'Cannot delete your own account'
+        message: "Cannot delete your own account",
       });
       return;
     }
@@ -166,16 +185,16 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
     if (!targetUser) {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
       return;
     }
 
-    // Only super admin can delete other super admins
-    if (targetUser.role === 'super_admin' && req.user?.role !== 'super_admin') {
+    // Only admins can delete other users
+    if (req.user?.role !== "admin") {
       res.status(403).json({
         success: false,
-        message: 'Only super admins can delete super admin accounts'
+        message: "Only admins can delete user accounts",
       });
       return;
     }
@@ -184,14 +203,13 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
 
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: "User deleted successfully",
     });
-
   } catch (error) {
-    logger.error('Delete user error:', error);
+    logger.error("Delete user error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };

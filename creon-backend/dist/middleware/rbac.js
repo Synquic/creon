@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.requirePermission = exports.hasPermission = exports.PERMISSIONS = exports.requireOwnershipOrAdmin = exports.canAccessOwnResource = exports.requireRole = exports.hasRole = void 0;
-const ROLE_HIERARCHY = ['viewer', 'user', 'manager', 'admin', 'super_admin'];
+exports.requirePermission = exports.hasPermission = exports.PERMISSIONS = exports.requireOwnershipOrAdmin = exports.canManageProfile = exports.canAccessOwnResource = exports.requireRole = exports.hasRole = void 0;
+const ROLE_HIERARCHY = ['admin', 'manager'];
 const hasRole = (userRole, requiredRole) => {
     const userRoleIndex = ROLE_HIERARCHY.indexOf(userRole);
     const requiredRoleIndex = ROLE_HIERARCHY.indexOf(requiredRole);
@@ -30,12 +30,29 @@ exports.requireRole = requireRole;
 const canAccessOwnResource = (req, resourceUserId) => {
     const userRole = req.user?.role;
     const userId = req.user?.id;
+    const parentUserId = req.user?.parentUserId;
     if ((0, exports.hasRole)(userRole, 'admin')) {
+        return true;
+    }
+    if (userRole === 'manager' && parentUserId && parentUserId === resourceUserId) {
         return true;
     }
     return userId === resourceUserId;
 };
 exports.canAccessOwnResource = canAccessOwnResource;
+const canManageProfile = (req, targetUserId) => {
+    const userRole = req.user?.role;
+    const userId = req.user?.id;
+    const parentUserId = req.user?.parentUserId;
+    if (userRole === 'admin' && userId === targetUserId) {
+        return true;
+    }
+    if (userRole === 'manager' && parentUserId && parentUserId === targetUserId) {
+        return true;
+    }
+    return false;
+};
+exports.canManageProfile = canManageProfile;
 const requireOwnershipOrAdmin = (getUserIdFromResource) => {
     return (req, res, next) => {
         if (!req.user) {
@@ -63,21 +80,23 @@ const requireOwnershipOrAdmin = (getUserIdFromResource) => {
 exports.requireOwnershipOrAdmin = requireOwnershipOrAdmin;
 exports.PERMISSIONS = {
     CREATE_USER: 'admin',
-    DELETE_USER: 'super_admin',
+    DELETE_USER: 'admin',
     MANAGE_USERS: 'admin',
-    VIEW_ALL_USERS: 'manager',
-    CREATE_CONTENT: 'user',
-    EDIT_CONTENT: 'user',
-    DELETE_CONTENT: 'user',
-    VIEW_CONTENT: 'viewer',
-    VIEW_ANALYTICS: 'user',
+    VIEW_ALL_USERS: 'admin',
+    CREATE_CONTENT: 'manager',
+    EDIT_CONTENT: 'manager',
+    DELETE_CONTENT: 'manager',
+    VIEW_CONTENT: 'manager',
+    VIEW_ANALYTICS: 'manager',
     VIEW_ALL_ANALYTICS: 'manager',
-    SYSTEM_SETTINGS: 'super_admin',
-    MANAGE_ROLES: 'super_admin',
-    MANAGE_SHOP: 'user',
-    VIEW_SHOP: 'viewer',
-    MANAGE_THEME: 'user',
-    VIEW_THEME: 'viewer'
+    MANAGE_PROFILE: 'manager',
+    VIEW_PROFILE: 'manager',
+    SYSTEM_SETTINGS: 'manager',
+    MANAGE_ROLES: 'admin',
+    MANAGE_SHOP: 'manager',
+    VIEW_SHOP: 'manager',
+    MANAGE_THEME: 'manager',
+    VIEW_THEME: 'manager'
 };
 const hasPermission = (userRole, permission) => {
     const requiredRole = exports.PERMISSIONS[permission];
@@ -110,6 +129,7 @@ exports.default = {
     hasRole: exports.hasRole,
     hasPermission: exports.hasPermission,
     canAccessOwnResource: exports.canAccessOwnResource,
+    canManageProfile: exports.canManageProfile,
     PERMISSIONS: exports.PERMISSIONS
 };
 //# sourceMappingURL=rbac.js.map

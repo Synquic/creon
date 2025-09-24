@@ -1,9 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLinkAnalytics = exports.redirectLink = exports.reorderLinks = exports.deleteLink = exports.updateLink = exports.getLinkById = exports.getLinks = exports.createLink = void 0;
+exports.retestAllLinks = exports.retestLinks = exports.getLinkAnalytics = exports.redirectLink = exports.reorderLinks = exports.deleteLink = exports.updateLink = exports.getLinkById = exports.getLinks = exports.createLink = void 0;
 const models_1 = require("../models");
 const shortCode_1 = require("../utils/shortCode");
 const index_1 = require("../index");
+const testLinks_1 = require("../jobs/testLinks");
+const getEffectiveUserId = (user) => {
+    if (user?.role === 'manager' && user?.parentUserId) {
+        return user.parentUserId;
+    }
+    return user?.id;
+};
 const checkShortCodeUnique = async (code) => {
     const existing = await models_1.Link.findOne({ shortCode: code });
     return !existing;
@@ -18,8 +25,8 @@ const createLink = async (req, res) => {
                 contentType: req.headers["content-type"],
             },
         });
-        const { title, url, shortCode, description, image, type = "link", } = req.body;
-        const userId = req.user?.id;
+        const { title, url, shortCode, description, image, type = "link", isWorking = true, } = req.body;
+        const userId = getEffectiveUserId(req.user);
         let finalShortCode = shortCode;
         if (shortCode) {
             if (!(0, shortCode_1.isValidShortCode)(shortCode)) {
@@ -51,6 +58,7 @@ const createLink = async (req, res) => {
             description,
             image,
             type,
+            isWorking,
             order,
         });
         res.status(201).json({
@@ -71,7 +79,7 @@ exports.createLink = createLink;
 const getLinks = async (req, res) => {
     try {
         index_1.logger.info("Get links called", { query: req.query });
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const { page = 1, limit = 20, sortBy = "order", sortOrder = "asc", } = req.query;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
@@ -107,7 +115,7 @@ exports.getLinks = getLinks;
 const getLinkById = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const link = await models_1.Link.findOne({ _id: id, userId });
         if (!link) {
             res.status(404).json({
@@ -133,9 +141,9 @@ exports.getLinkById = getLinkById;
 const updateLink = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
-        const { title, url, shortCode, description, image, isActive, order } = req.body;
-        let updateData = { title, url, description, image, isActive };
+        const userId = getEffectiveUserId(req.user);
+        const { title, url, shortCode, description, image, isActive, isWorking, order } = req.body;
+        let updateData = { title, url, description, image, isActive, isWorking };
         if (order !== undefined) {
             updateData.order = order;
         }
@@ -182,7 +190,7 @@ exports.updateLink = updateLink;
 const deleteLink = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const link = await models_1.Link.findOneAndDelete({ _id: id, userId });
         if (!link) {
             res.status(404).json({
@@ -266,7 +274,7 @@ exports.redirectLink = redirectLink;
 const getLinkAnalytics = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const { period = "7d" } = req.query;
         const link = await models_1.Link.findOne({ _id: id, userId });
         if (!link) {
@@ -314,4 +322,63 @@ const getLinkAnalytics = async (req, res) => {
     }
 };
 exports.getLinkAnalytics = getLinkAnalytics;
+const retestLinks = async (req, res) => {
+    try {
+        const userId = getEffectiveUserId(req.user);
+        if (!userId) {
+            res.status(401).json({
+                success: false,
+                message: "User not authenticated",
+            });
+            return;
+        }
+        index_1.logger.info(`Manual link retest requested by user: ${userId}`);
+        const results = await testLinks_1.LinkTester.testLinksForUser(userId);
+        const stats = await testLinks_1.LinkTester.getLinkTestStats();
+        res.json({
+            success: true,
+            message: "Link testing completed successfully",
+            data: {
+                tested: results.length,
+                working: results.filter(r => r.isWorking).length,
+                notWorking: results.filter(r => !r.isWorking).length,
+                results,
+                stats,
+            },
+        });
+    }
+    catch (error) {
+        index_1.logger.error("Retest links error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to test links",
+        });
+    }
+};
+exports.retestLinks = retestLinks;
+const retestAllLinks = async (req, res) => {
+    try {
+        index_1.logger.info("Manual retest of all links requested");
+        const results = await testLinks_1.LinkTester.testAllLinks();
+        const stats = await testLinks_1.LinkTester.getLinkTestStats();
+        res.json({
+            success: true,
+            message: "All links testing completed successfully",
+            data: {
+                tested: results.length,
+                working: results.filter(r => r.isWorking).length,
+                notWorking: results.filter(r => !r.isWorking).length,
+                stats,
+            },
+        });
+    }
+    catch (error) {
+        index_1.logger.error("Retest all links error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to test all links",
+        });
+    }
+};
+exports.retestAllLinks = retestAllLinks;
 //# sourceMappingURL=linkController.js.map

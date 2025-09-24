@@ -1,7 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paginationValidation = exports.shortCodeValidation = exports.usernameValidation = exports.productValidation = exports.linkValidation = exports.loginValidation = exports.registerValidation = exports.handleValidationErrors = void 0;
+exports.paginationValidation = exports.shortCodeValidation = exports.usernameValidation = exports.productValidation = exports.linkValidation = exports.loginValidation = exports.registerValidation = exports.handleValidationErrors = exports.query = exports.param = exports.body = void 0;
 const express_validator_1 = require("express-validator");
+Object.defineProperty(exports, "body", { enumerable: true, get: function () { return express_validator_1.body; } });
+Object.defineProperty(exports, "param", { enumerable: true, get: function () { return express_validator_1.param; } });
+Object.defineProperty(exports, "query", { enumerable: true, get: function () { return express_validator_1.query; } });
 const handleValidationErrors = (req, res, next) => {
     const errors = (0, express_validator_1.validationResult)(req);
     if (!errors.isEmpty()) {

@@ -7,6 +7,8 @@ import {
   deleteLink,
   reorderLinks,
   getLinkAnalytics,
+  retestLinks,
+  retestAllLinks,
 } from "../controllers/linkController";
 import { authenticate } from "../middleware/auth";
 import { createLimiter } from "../middleware/rateLimiting";
@@ -39,5 +41,9 @@ router.put("/:id", updateLink);
 router.delete("/:id", deleteLink);
 
 router.get("/:id/analytics", getLinkAnalytics);
+
+router.post("/retest", retestLinks);
+
+router.post("/retest-all", retestAllLinks);
 
 export default router;

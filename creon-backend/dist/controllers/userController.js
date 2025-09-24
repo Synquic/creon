@@ -8,10 +8,17 @@ const models_1 = require("../models");
 const Theme_1 = require("../models/Theme");
 const ShopSettings_1 = __importDefault(require("../models/ShopSettings"));
 const index_1 = require("../index");
+const getEffectiveUserId = (user) => {
+    if (user?.role === 'manager' && user?.parentUserId) {
+        return user.parentUserId;
+    }
+    return user?.id;
+};
 const updateProfile = async (req, res) => {
     try {
         const { firstName, lastName, bio, socialLinks, theme } = req.body;
-        const user = await models_1.User.findByIdAndUpdate(req.user?.id, {
+        const targetUserId = getEffectiveUserId(req.user);
+        const user = await models_1.User.findByIdAndUpdate(targetUserId, {
             firstName,
             lastName,
             bio,
@@ -179,29 +186,29 @@ const checkUsernameAvailability = async (req, res) => {
 exports.checkUsernameAvailability = checkUsernameAvailability;
 const getDashboardStats = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const targetUserId = getEffectiveUserId(req.user);
         const [linkCount, productCount, collectionCount] = await Promise.all([
-            models_1.Link.countDocuments({ userId }),
-            models_1.Product.countDocuments({ userId }),
-            models_1.ProductCollection.countDocuments({ userId })
+            models_1.Link.countDocuments({ userId: targetUserId }),
+            models_1.Product.countDocuments({ userId: targetUserId }),
+            models_1.ProductCollection.countDocuments({ userId: targetUserId })
         ]);
         const totalClicks = await models_1.Analytics.countDocuments({
-            userId,
+            userId: targetUserId,
             type: { $in: ['link_click', 'product_click'] }
         });
         const profileViews = await models_1.Analytics.countDocuments({
-            userId,
+            userId: targetUserId,
             type: 'profile_view'
         });
         const last7Days = new Date();
         last7Days.setDate(last7Days.getDate() - 7);
         const recentClicks = await models_1.Analytics.countDocuments({
-            userId,
+            userId: targetUserId,
             type: { $in: ['link_click', 'product_click'] },
             timestamp: { $gte: last7Days }
         });
         const recentViews = await models_1.Analytics.countDocuments({
-            userId,
+            userId: targetUserId,
             type: 'profile_view',
             timestamp: { $gte: last7Days }
         });

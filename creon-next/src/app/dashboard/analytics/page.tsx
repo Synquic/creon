@@ -75,6 +75,7 @@ const AnalyticsPageNew: React.FC = () => {
   const links: LinkData[] = linksData?.data?.data?.links || [];
 
   const handleExportData = () => {
+    alert("development in progress");
     // Create CSV data
     const csvData = [
       ["Date", "Link Title", "Clicks", "Views", "Click Rate"],

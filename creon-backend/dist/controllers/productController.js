@@ -1,9 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProductAnalytics = exports.redirectProduct = exports.deleteProduct = exports.updateProduct = exports.getProductById = exports.getProducts = exports.createProduct = void 0;
+exports.retestAllProducts = exports.retestProducts = exports.getProductAnalytics = exports.redirectProduct = exports.deleteProduct = exports.updateProduct = exports.getProductById = exports.getProducts = exports.createProduct = void 0;
 const models_1 = require("../models");
 const shortCode_1 = require("../utils/shortCode");
 const index_1 = require("../index");
+const testLinks_1 = require("../jobs/testLinks");
+const getEffectiveUserId = (user) => {
+    if (user?.role === 'manager' && user?.parentUserId) {
+        return user.parentUserId;
+    }
+    return user?.id;
+};
 const checkProductShortCodeUnique = async (code) => {
     const existing = await models_1.Product.findOne({ shortCode: code });
     return !existing;
@@ -11,7 +18,7 @@ const checkProductShortCodeUnique = async (code) => {
 const createProduct = async (req, res) => {
     try {
         const { title, description, price, currency = 'USD', image, affiliateUrl, shortCode, tags = [], collectionId } = req.body;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         let finalShortCode = shortCode;
         if (shortCode) {
             if (!(0, shortCode_1.isValidShortCode)(shortCode)) {
@@ -78,7 +85,7 @@ const createProduct = async (req, res) => {
 exports.createProduct = createProduct;
 const getProducts = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc', collectionId, tags } = req.query;
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
@@ -126,7 +133,7 @@ exports.getProducts = getProducts;
 const getProductById = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const product = await models_1.Product.findOne({ _id: id, userId })
             .populate('collectionId', 'title');
         if (!product) {
@@ -153,7 +160,7 @@ exports.getProductById = getProductById;
 const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const { title, description, price, currency, image, affiliateUrl, shortCode, tags, isActive, collectionId } = req.body;
         let updateData = {
             title,
@@ -221,7 +228,7 @@ exports.updateProduct = updateProduct;
 const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const product = await models_1.Product.findOneAndDelete({ _id: id, userId });
         if (!product) {
             res.status(404).json({
@@ -286,7 +293,7 @@ exports.redirectProduct = redirectProduct;
 const getProductAnalytics = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = getEffectiveUserId(req.user);
         const { period = '7d' } = req.query;
         const product = await models_1.Product.findOne({ _id: id, userId });
         if (!product) {
@@ -334,4 +341,65 @@ const getProductAnalytics = async (req, res) => {
     }
 };
 exports.getProductAnalytics = getProductAnalytics;
+const retestProducts = async (req, res) => {
+    try {
+        const userId = getEffectiveUserId(req.user);
+        if (!userId) {
+            res.status(401).json({
+                success: false,
+                message: 'User not authenticated'
+            });
+            return;
+        }
+        index_1.logger.info(`Manual product retest requested by user: ${userId}`);
+        const results = await testLinks_1.LinkTester.testLinksForUser(userId);
+        const productResults = results.filter(r => r.itemType === 'product');
+        const stats = await testLinks_1.LinkTester.getLinkTestStats();
+        res.json({
+            success: true,
+            message: 'Product testing completed successfully',
+            data: {
+                tested: productResults.length,
+                working: productResults.filter(r => r.isWorking).length,
+                notWorking: productResults.filter(r => !r.isWorking).length,
+                results: productResults,
+                stats: stats.products,
+            }
+        });
+    }
+    catch (error) {
+        index_1.logger.error('Retest products error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to test products'
+        });
+    }
+};
+exports.retestProducts = retestProducts;
+const retestAllProducts = async (req, res) => {
+    try {
+        index_1.logger.info('Manual retest of all products requested');
+        const results = await testLinks_1.LinkTester.testAllLinks();
+        const productResults = results.filter(r => r.itemType === 'product');
+        const stats = await testLinks_1.LinkTester.getLinkTestStats();
+        res.json({
+            success: true,
+            message: 'All products testing completed successfully',
+            data: {
+                tested: productResults.length,
+                working: productResults.filter(r => r.isWorking).length,
+                notWorking: productResults.filter(r => !r.isWorking).length,
+                stats: stats.products,
+            }
+        });
+    }
+    catch (error) {
+        index_1.logger.error('Retest all products error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to test all products'
+        });
+    }
+};
+exports.retestAllProducts = retestAllProducts;
 //# sourceMappingURL=productController.js.map

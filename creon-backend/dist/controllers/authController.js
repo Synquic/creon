@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProfile = exports.checkUsernameAvailability = exports.logoutAll = exports.logout = exports.refreshToken = exports.login = exports.register = void 0;
+exports.getProfile = exports.checkUsernameAvailability = exports.logoutAll = exports.logout = exports.refreshToken = exports.changePassword = exports.login = exports.register = void 0;
 const models_1 = require("../models");
 const jwt_1 = require("../utils/jwt");
 const index_1 = require("../index");
@@ -87,6 +87,8 @@ const login = async (req, res) => {
             username: user.username,
             email: user.email,
             role: user.role,
+            userType: user.userType,
+            parentUserId: user.parentUserId,
         };
         const accessToken = (0, jwt_1.generateToken)(tokenPayload);
         const refreshToken = (0, jwt_1.generateRefreshToken)(user._id.toString());
@@ -108,6 +110,9 @@ const login = async (req, res) => {
                     firstName: user.firstName,
                     lastName: user.lastName,
                     role: user.role,
+                    userType: user.userType,
+                    parentUserId: user.parentUserId,
+                    isFirstLogin: user.isFirstLogin,
                     profileUrl: `/${user.username}`,
                 },
                 tokens: {
@@ -126,6 +131,45 @@ const login = async (req, res) => {
     }
 };
 exports.login = login;
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user?.id;
+        const user = await models_1.User.findById(userId).select('+password');
+        if (!user) {
+            res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+            return;
+        }
+        if (!user.isFirstLogin) {
+            const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+            if (!isCurrentPasswordValid) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Current password is incorrect'
+                });
+                return;
+            }
+        }
+        user.password = newPassword;
+        user.isFirstLogin = false;
+        await user.save();
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+    }
+    catch (error) {
+        index_1.logger.error('Change password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+exports.changePassword = changePassword;
 const refreshToken = async (req, res) => {
     try {
         const { refreshToken } = req.body;
@@ -267,40 +311,49 @@ const checkUsernameAvailability = async (req, res) => {
 exports.checkUsernameAvailability = checkUsernameAvailability;
 const getProfile = async (req, res) => {
     try {
-        const user = await models_1.User.findById(req.user?.id);
-        if (!user) {
+        const currentUser = await models_1.User.findById(req.user?.id);
+        if (!currentUser) {
             res.status(404).json({
                 success: false,
                 message: "User not found",
             });
             return;
         }
+        let profileUser = currentUser;
+        if (currentUser.role === 'manager' && currentUser.parentUserId) {
+            const parentUser = await models_1.User.findById(currentUser.parentUserId);
+            if (parentUser) {
+                profileUser = parentUser;
+            }
+        }
         let protocol = process.env.BASE_PROTOCOL
             ? process.env.BASE_PROTOCOL
             : "http";
         const baseUrl = `${protocol}://${req.get("host")}`;
-        const profileImageUrl = user.profileImage
-            ? user.profileImage.startsWith("http")
-                ? user.profileImage
-                : `${baseUrl}${user.profileImage}`
+        const profileImageUrl = profileUser.profileImage
+            ? profileUser.profileImage.startsWith("http")
+                ? profileUser.profileImage
+                : `${baseUrl}${profileUser.profileImage}`
             : null;
         res.json({
             success: true,
             data: {
                 user: {
-                    id: user._id,
-                    username: user.username,
-                    email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    bio: user.bio,
+                    id: profileUser._id,
+                    username: profileUser.username,
+                    email: profileUser.email,
+                    firstName: profileUser.firstName,
+                    lastName: profileUser.lastName,
+                    bio: profileUser.bio,
                     profileImage: profileImageUrl,
-                    role: user.role,
-                    socialLinks: user.socialLinks,
-                    theme: user.theme,
-                    isPremium: user.isPremium,
-                    profileUrl: `/${user.username}`,
-                    createdAt: user.createdAt,
+                    role: currentUser.role,
+                    userType: currentUser.userType,
+                    parentUserId: currentUser.parentUserId,
+                    socialLinks: profileUser.socialLinks,
+                    theme: profileUser.theme,
+                    isPremium: profileUser.isPremium,
+                    profileUrl: `/${profileUser.username}`,
+                    createdAt: profileUser.createdAt,
                 },
             },
         });

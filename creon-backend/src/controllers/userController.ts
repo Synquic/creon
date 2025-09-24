@@ -5,12 +5,25 @@ import { Theme } from '../models/Theme';
 import ShopSettings from '../models/ShopSettings';
 import { logger } from '../index';
 
+// Helper function to get the effective user for profile operations
+const getEffectiveUserId = (user: any): string => {
+  // If user is a manager, return their parent's ID
+  if (user?.role === 'manager' && user?.parentUserId) {
+    return user.parentUserId;
+  }
+  // Otherwise return their own ID
+  return user?.id;
+};
+
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { firstName, lastName, bio, socialLinks, theme } = req.body;
+    
+    // Get the effective user ID (parent for managers, self for admins)
+    const targetUserId = getEffectiveUserId(req.user);
 
     const user = await User.findByIdAndUpdate(
-      req.user?.id,
+      targetUserId,
       {
         firstName,
         lastName,
@@ -199,21 +212,22 @@ export const checkUsernameAvailability = async (req: Request, res: Response): Pr
 
 export const getDashboardStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    // Get the effective user ID (parent for managers, self for admins)
+    const targetUserId = getEffectiveUserId(req.user);
 
     const [linkCount, productCount, collectionCount] = await Promise.all([
-      Link.countDocuments({ userId }),
-      Product.countDocuments({ userId }),
-      ProductCollection.countDocuments({ userId })
+      Link.countDocuments({ userId: targetUserId }),
+      Product.countDocuments({ userId: targetUserId }),
+      ProductCollection.countDocuments({ userId: targetUserId })
     ]);
 
     const totalClicks = await Analytics.countDocuments({
-      userId,
+      userId: targetUserId,
       type: { $in: ['link_click', 'product_click'] }
     });
 
     const profileViews = await Analytics.countDocuments({
-      userId,
+      userId: targetUserId,
       type: 'profile_view'
     });
 
@@ -221,13 +235,13 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
     last7Days.setDate(last7Days.getDate() - 7);
 
     const recentClicks = await Analytics.countDocuments({
-      userId,
+      userId: targetUserId,
       type: { $in: ['link_click', 'product_click'] },
       timestamp: { $gte: last7Days }
     });
 
     const recentViews = await Analytics.countDocuments({
-      userId,
+      userId: targetUserId,
       type: 'profile_view',
       timestamp: { $gte: last7Days }
     });

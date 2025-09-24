@@ -101,6 +101,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       username: user.username,
       email: user.email,
       role: user.role,
+      userType: user.userType,
+      parentUserId: user.parentUserId,
     };
 
     const accessToken = generateToken(tokenPayload);
@@ -125,6 +127,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
+          userType: user.userType,
+          parentUserId: user.parentUserId,
+          isFirstLogin: user.isFirstLogin,
           profileUrl: `/${user.username}`,
         },
         tokens: {
@@ -138,6 +143,49 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user?.id;
+
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+      return;
+    }
+
+    // For first login, skip current password validation
+    if (!user.isFirstLogin) {
+      const isCurrentPasswordValid = await (user as any).comparePassword(currentPassword);
+      if (!isCurrentPasswordValid) {
+        res.status(400).json({
+          success: false,
+          message: 'Current password is incorrect'
+        });
+        return;
+      }
+    }
+
+    user.password = newPassword;
+    user.isFirstLogin = false;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    logger.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
     });
   }
 };
@@ -311,9 +359,9 @@ export const getProfile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const user = await User.findById(req.user?.id);
+    const currentUser = await User.findById(req.user?.id);
 
-    if (!user) {
+    if (!currentUser) {
       res.status(404).json({
         success: false,
         message: "User not found",
@@ -321,34 +369,45 @@ export const getProfile = async (
       return;
     }
 
+    // If user is a manager, get their parent's profile data
+    let profileUser = currentUser;
+    if (currentUser.role === 'manager' && currentUser.parentUserId) {
+      const parentUser = await User.findById(currentUser.parentUserId);
+      if (parentUser) {
+        profileUser = parentUser;
+      }
+    }
+
     // Determine protocol: use process.env.BASE_PROTOCOL if set, otherwise default to 'http'
     let protocol = process.env.BASE_PROTOCOL
       ? process.env.BASE_PROTOCOL
       : "http";
     const baseUrl = `${protocol}://${req.get("host")}`;
-    const profileImageUrl = user.profileImage
-      ? user.profileImage.startsWith("http")
-        ? user.profileImage
-        : `${baseUrl}${user.profileImage}`
+    const profileImageUrl = profileUser.profileImage
+      ? profileUser.profileImage.startsWith("http")
+        ? profileUser.profileImage
+        : `${baseUrl}${profileUser.profileImage}`
       : null;
 
     res.json({
       success: true,
       data: {
         user: {
-          id: user._id as any,
-          username: user.username,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          bio: user.bio,
+          id: profileUser._id as any,
+          username: profileUser.username,
+          email: profileUser.email,
+          firstName: profileUser.firstName,
+          lastName: profileUser.lastName,
+          bio: profileUser.bio,
           profileImage: profileImageUrl,
-          role: user.role,
-          socialLinks: user.socialLinks,
-          theme: user.theme,
-          isPremium: user.isPremium,
-          profileUrl: `/${user.username}`,
-          createdAt: user.createdAt,
+          role: currentUser.role, // Keep the current user's role for permissions
+          userType: currentUser.userType,
+          parentUserId: currentUser.parentUserId,
+          socialLinks: profileUser.socialLinks,
+          theme: profileUser.theme,
+          isPremium: profileUser.isPremium,
+          profileUrl: `/${profileUser.username}`,
+          createdAt: profileUser.createdAt,
         },
       },
     });
