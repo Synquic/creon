@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { User } from '../models';
-import { verifyToken, extractTokenFromHeader } from '../utils/jwt';
+import { Request, Response, NextFunction } from "express";
+import { User } from "../models";
+import { verifyToken, extractTokenFromHeader } from "../utils/jwt";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -20,22 +20,22 @@ export const authenticate = async (
 ): Promise<void> => {
   try {
     const token = extractTokenFromHeader(req.headers.authorization);
-    
+
     if (!token) {
       res.status(401).json({
         success: false,
-        message: 'Access token is required'
+        message: "Access token is required",
       });
       return;
     }
 
     const decoded = verifyToken(token);
-    
+
     const user = await User.findById(decoded.id);
     if (!user) {
       res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
       return;
     }
@@ -46,14 +46,14 @@ export const authenticate = async (
       email: user.email,
       role: user.role,
       userType: user.userType,
-      parentUserId: user.parentUserId
+      parentUserId: user.parentUserId,
     };
 
     next();
   } catch (error) {
     res.status(401).json({
       success: false,
-      message: error instanceof Error ? error.message : 'Authentication failed'
+      message: error instanceof Error ? error.message : "Authentication failed",
     });
   }
 };
@@ -63,7 +63,7 @@ export const authorize = (...roles: string[]) => {
     if (!req.user) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: "Authentication required",
       });
       return;
     }
@@ -71,7 +71,7 @@ export const authorize = (...roles: string[]) => {
     if (!roles.includes(req.user.role)) {
       res.status(403).json({
         success: false,
-        message: 'Insufficient permissions'
+        message: "Insufficient permissions",
       });
       return;
     }
@@ -87,11 +87,11 @@ export const optionalAuth = async (
 ): Promise<void> => {
   try {
     const token = extractTokenFromHeader(req.headers.authorization);
-    
+
     if (token) {
       const decoded = verifyToken(token);
       const user = await User.findById(decoded.id);
-      
+
       if (user) {
         req.user = {
           id: (user._id as any).toString(),
@@ -99,7 +99,7 @@ export const optionalAuth = async (
           email: user.email,
           role: user.role,
           userType: user.userType,
-          parentUserId: user.parentUserId
+          parentUserId: user.parentUserId,
         };
       }
     }
@@ -118,15 +118,15 @@ export const requireParentUser = (
   if (!req.user) {
     res.status(401).json({
       success: false,
-      message: 'Authentication required'
+      message: "Authentication required",
     });
     return;
   }
 
-  if (req.user.userType !== 'parent') {
+  if (req.user.userType !== "parent") {
     res.status(403).json({
       success: false,
-      message: 'Access denied. Only parent users can access this resource.'
+      message: "Access denied. Only parent users can access this resource.",
     });
     return;
   }

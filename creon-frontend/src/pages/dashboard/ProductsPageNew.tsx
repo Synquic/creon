@@ -141,7 +141,7 @@ const ProductsPageNew: React.FC = () => {
     },
     onError: (error: string) => {
       toast.error("Failed to delete product");
-            console.log(error);
+      console.log(error);
     },
   });
 
@@ -153,7 +153,7 @@ const ProductsPageNew: React.FC = () => {
     },
     onError: (error: string) => {
       toast.error("Failed to toggle product status");
-            console.log(error);
+      console.log(error);
     },
   });
 
@@ -446,7 +446,9 @@ const ProductsPageNew: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Products</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Products
+              </h1>
               <p className="text-gray-600">
                 Manage your products and affiliate links
               </p>

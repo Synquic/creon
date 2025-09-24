@@ -147,27 +147,32 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
+export const changePassword = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user?.id;
 
-    const user = await User.findById(userId).select('+password');
+    const user = await User.findById(userId).select("+password");
     if (!user) {
       res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
       return;
     }
 
     // For first login, skip current password validation
     if (!user.isFirstLogin) {
-      const isCurrentPasswordValid = await (user as any).comparePassword(currentPassword);
+      const isCurrentPasswordValid = await (user as any).comparePassword(
+        currentPassword
+      );
       if (!isCurrentPasswordValid) {
         res.status(400).json({
           success: false,
-          message: 'Current password is incorrect'
+          message: "Current password is incorrect",
         });
         return;
       }
@@ -179,13 +184,13 @@ export const changePassword = async (req: AuthRequest, res: Response): Promise<v
 
     res.json({
       success: true,
-      message: 'Password changed successfully'
+      message: "Password changed successfully",
     });
   } catch (error) {
-    logger.error('Change password error:', error);
+    logger.error("Change password error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
@@ -371,7 +376,7 @@ export const getProfile = async (
 
     // If user is a manager, get their parent's profile data
     let profileUser = currentUser;
-    if (currentUser.role === 'manager' && currentUser.parentUserId) {
+    if (currentUser.role === "manager" && currentUser.parentUserId) {
       const parentUser = await User.findById(currentUser.parentUserId);
       if (parentUser) {
         profileUser = parentUser;

@@ -1,14 +1,14 @@
-import { Request, Response } from 'express';
-import { Product, ProductCollection, Analytics } from '../models';
-import { AuthRequest } from '../middleware/auth';
-import { generateUniqueShortCode, isValidShortCode } from '../utils/shortCode';
-import { logger } from '../index';
-import { LinkTester } from '../jobs/testLinks';
+import { Request, Response } from "express";
+import { Product, ProductCollection, Analytics } from "../models";
+import { AuthRequest } from "../middleware/auth";
+import { generateUniqueShortCode, isValidShortCode } from "../utils/shortCode";
+import { logger } from "../index";
+import { LinkTester } from "../jobs/testLinks";
 
 // Helper function to get the effective user for profile operations
 const getEffectiveUserId = (user: any): string => {
   // If user is a manager, return their parent's ID
-  if (user?.role === 'manager' && user?.parentUserId) {
+  if (user?.role === "manager" && user?.parentUserId) {
     return user.parentUserId;
   }
   // Otherwise return their own ID
@@ -20,18 +20,21 @@ const checkProductShortCodeUnique = async (code: string): Promise<boolean> => {
   return !existing;
 };
 
-export const createProduct = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createProduct = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const {
       title,
       description,
       price,
-      currency = 'USD',
+      currency = "USD",
       image,
       affiliateUrl,
       shortCode,
       tags = [],
-      collectionId
+      collectionId,
     } = req.body;
     const userId = getEffectiveUserId(req.user);
 
@@ -41,7 +44,7 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
       if (!isValidShortCode(shortCode)) {
         res.status(400).json({
           success: false,
-          message: 'Invalid short code format'
+          message: "Invalid short code format",
         });
         return;
       }
@@ -50,24 +53,26 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
       if (!isUnique) {
         res.status(400).json({
           success: false,
-          message: 'Short code is already taken'
+          message: "Short code is already taken",
         });
         return;
       }
     } else {
-      finalShortCode = await generateUniqueShortCode(checkProductShortCodeUnique);
+      finalShortCode = await generateUniqueShortCode(
+        checkProductShortCodeUnique
+      );
     }
 
     if (collectionId) {
       const collection = await ProductCollection.findOne({
         _id: collectionId,
-        userId
+        userId,
       });
 
       if (!collection) {
         res.status(400).json({
           success: false,
-          message: 'Collection not found'
+          message: "Collection not found",
         });
         return;
       }
@@ -83,47 +88,49 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
       affiliateUrl,
       shortCode: finalShortCode,
       tags,
-      collectionId: collectionId || null
+      collectionId: collectionId || null,
     });
 
     if (collectionId) {
-      await ProductCollection.findByIdAndUpdate(
-        collectionId,
-        { $push: { products: product._id } }
-      );
+      await ProductCollection.findByIdAndUpdate(collectionId, {
+        $push: { products: product._id },
+      });
     }
 
     res.status(201).json({
       success: true,
-      message: 'Product created successfully',
-      data: { product }
+      message: "Product created successfully",
+      data: { product },
     });
   } catch (error) {
-    logger.error('Create product error:', error);
+    logger.error("Create product error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const getProducts = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getProducts = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = getEffectiveUserId(req.user);
-    const { 
-      page = 1, 
-      limit = 20, 
-      sortBy = 'createdAt', 
-      sortOrder = 'desc',
+    const {
+      page = 1,
+      limit = 20,
+      sortBy = "createdAt",
+      sortOrder = "desc",
       collectionId,
-      tags
+      tags,
     } = req.query;
 
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
-    const sortDirection = sortOrder === 'desc' ? -1 : 1;
+    const sortDirection = sortOrder === "desc" ? -1 : 1;
     const sortOptions: any = { [sortBy as string]: sortDirection };
 
     const filter: any = { userId };
@@ -142,8 +149,8 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
         .sort(sortOptions)
         .skip(skip)
         .limit(limitNum)
-        .populate('collectionId', 'title'),
-      Product.countDocuments(filter)
+        .populate("collectionId", "title"),
+      Product.countDocuments(filter),
     ]);
 
     res.json({
@@ -154,49 +161,57 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
           page: pageNum,
           limit: limitNum,
           total,
-          pages: Math.ceil(total / limitNum)
-        }
-      }
+          pages: Math.ceil(total / limitNum),
+        },
+      },
     });
   } catch (error) {
-    logger.error('Get products error:', error);
+    logger.error("Get products error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const getProductById = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getProductById = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const userId = getEffectiveUserId(req.user);
 
-    const product = await Product.findOne({ _id: id, userId })
-      .populate('collectionId', 'title');
+    const product = await Product.findOne({ _id: id, userId }).populate(
+      "collectionId",
+      "title"
+    );
 
     if (!product) {
       res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: "Product not found",
       });
       return;
     }
 
     res.json({
       success: true,
-      data: { product }
+      data: { product },
     });
   } catch (error) {
-    logger.error('Get product by ID error:', error);
+    logger.error("Get product by ID error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const updateProduct = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateProduct = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const userId = getEffectiveUserId(req.user);
@@ -210,7 +225,7 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
       shortCode,
       tags,
       isActive,
-      collectionId
+      collectionId,
     } = req.body;
 
     let updateData: any = {
@@ -221,19 +236,19 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
       image,
       affiliateUrl,
       tags,
-      isActive
+      isActive,
     };
 
     if (shortCode) {
       const existingProduct = await Product.findOne({
         shortCode,
-        _id: { $ne: id }
+        _id: { $ne: id },
       });
 
       if (existingProduct) {
         res.status(400).json({
           success: false,
-          message: 'Short code is already taken'
+          message: "Short code is already taken",
         });
         return;
       }
@@ -245,13 +260,13 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
       if (collectionId) {
         const collection = await ProductCollection.findOne({
           _id: collectionId,
-          userId
+          userId,
         });
 
         if (!collection) {
           res.status(400).json({
             success: false,
-            message: 'Collection not found'
+            message: "Collection not found",
           });
           return;
         }
@@ -263,31 +278,34 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
       { _id: id, userId },
       updateData,
       { new: true, runValidators: true }
-    ).populate('collectionId', 'title');
+    ).populate("collectionId", "title");
 
     if (!product) {
       res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: "Product not found",
       });
       return;
     }
 
     res.json({
       success: true,
-      message: 'Product updated successfully',
-      data: { product }
+      message: "Product updated successfully",
+      data: { product },
     });
   } catch (error) {
-    logger.error('Update product error:', error);
+    logger.error("Update product error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const deleteProduct = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deleteProduct = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const userId = getEffectiveUserId(req.user);
@@ -297,44 +315,46 @@ export const deleteProduct = async (req: AuthRequest, res: Response): Promise<vo
     if (!product) {
       res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: "Product not found",
       });
       return;
     }
 
     if (product.collectionId) {
-      await ProductCollection.findByIdAndUpdate(
-        product.collectionId,
-        { $pull: { products: product._id } }
-      );
+      await ProductCollection.findByIdAndUpdate(product.collectionId, {
+        $pull: { products: product._id },
+      });
     }
 
     res.json({
       success: true,
-      message: 'Product deleted successfully'
+      message: "Product deleted successfully",
     });
   } catch (error) {
-    logger.error('Delete product error:', error);
+    logger.error("Delete product error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const redirectProduct = async (req: Request, res: Response): Promise<void> => {
+export const redirectProduct = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { shortCode } = req.params;
 
     const product = await Product.findOne({
       shortCode,
-      isActive: true
+      isActive: true,
     });
 
     if (!product) {
       res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: "Product not found",
       });
       return;
     }
@@ -345,50 +365,53 @@ export const redirectProduct = async (req: Request, res: Response): Promise<void
     await Analytics.create({
       userId: product.userId,
       productId: (product._id as any).toString(),
-      type: 'product_click',
+      type: "product_click",
       ipAddress: req.ip,
-      userAgent: req.get('User-Agent') || 'unknown',
-      referer: req.get('Referer'),
-      timestamp: new Date()
+      userAgent: req.get("User-Agent") || "unknown",
+      referer: req.get("Referer"),
+      timestamp: new Date(),
     });
 
     res.redirect(301, product.affiliateUrl);
   } catch (error) {
-    logger.error('Redirect product error:', error);
+    logger.error("Redirect product error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const getProductAnalytics = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getProductAnalytics = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const userId = getEffectiveUserId(req.user);
-    const { period = '7d' } = req.query;
+    const { period = "7d" } = req.query;
 
     const product = await Product.findOne({ _id: id, userId });
 
     if (!product) {
       res.status(404).json({
         success: false,
-        message: 'Product not found'
+        message: "Product not found",
       });
       return;
     }
 
-    const days = period === '30d' ? 30 : period === '7d' ? 7 : 1;
+    const days = period === "30d" ? 30 : period === "7d" ? 7 : 1;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
     const analytics = await Analytics.find({
       productId: id,
-      timestamp: { $gte: startDate }
+      timestamp: { $gte: startDate },
     }).sort({ timestamp: -1 });
 
     const dailyClicks = analytics.reduce((acc: any, click) => {
-      const date = click.timestamp.toISOString().split('T')[0];
+      const date = click.timestamp.toISOString().split("T")[0];
       acc[date] = (acc[date] || 0) + 1;
       return acc;
     }, {});
@@ -400,95 +423,101 @@ export const getProductAnalytics = async (req: AuthRequest, res: Response): Prom
           id: product._id,
           title: product.title,
           shortCode: product.shortCode,
-          totalClicks: product.clickCount
+          totalClicks: product.clickCount,
         },
         analytics: {
           totalClicks: analytics.length,
           dailyClicks,
-          recentClicks: analytics.slice(0, 50)
-        }
-      }
+          recentClicks: analytics.slice(0, 50),
+        },
+      },
     });
   } catch (error) {
-    logger.error('Get product analytics error:', error);
+    logger.error("Get product analytics error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
-export const retestProducts = async (req: AuthRequest, res: Response): Promise<void> => {
+export const retestProducts = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = getEffectiveUserId(req.user);
-    
+
     if (!userId) {
       res.status(401).json({
         success: false,
-        message: 'User not authenticated'
+        message: "User not authenticated",
       });
       return;
     }
-    
+
     logger.info(`Manual product retest requested by user: ${userId}`);
 
     // Test products for the specific user
     const results = await LinkTester.testLinksForUser(userId);
-    
+
     // Filter results to only include products
-    const productResults = results.filter(r => r.itemType === 'product');
-    
+    const productResults = results.filter((r) => r.itemType === "product");
+
     // Get updated stats
     const stats = await LinkTester.getLinkTestStats();
 
     res.json({
       success: true,
-      message: 'Product testing completed successfully',
+      message: "Product testing completed successfully",
       data: {
         tested: productResults.length,
-        working: productResults.filter(r => r.isWorking).length,
-        notWorking: productResults.filter(r => !r.isWorking).length,
+        working: productResults.filter((r) => r.isWorking).length,
+        notWorking: productResults.filter((r) => !r.isWorking).length,
         results: productResults,
         stats: stats.products,
-      }
+      },
     });
   } catch (error) {
-    logger.error('Retest products error:', error);
+    logger.error("Retest products error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to test products'
+      message: "Failed to test products",
     });
   }
 };
 
-export const retestAllProducts = async (req: Request, res: Response): Promise<void> => {
+export const retestAllProducts = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    logger.info('Manual retest of all products requested');
+    logger.info("Manual retest of all products requested");
 
     // Test all links and products in the system
     const results = await LinkTester.testAllLinks();
-    
+
     // Filter results to only include products
-    const productResults = results.filter(r => r.itemType === 'product');
-    
+    const productResults = results.filter((r) => r.itemType === "product");
+
     // Get updated stats
     const stats = await LinkTester.getLinkTestStats();
 
     res.json({
       success: true,
-      message: 'All products testing completed successfully',
+      message: "All products testing completed successfully",
       data: {
         tested: productResults.length,
-        working: productResults.filter(r => r.isWorking).length,
-        notWorking: productResults.filter(r => !r.isWorking).length,
+        working: productResults.filter((r) => r.isWorking).length,
+        notWorking: productResults.filter((r) => !r.isWorking).length,
         stats: stats.products,
-      }
+      },
     });
   } catch (error) {
-    logger.error('Retest all products error:', error);
+    logger.error("Retest all products error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to test all products'
+      message: "Failed to test all products",
     });
   }
 };

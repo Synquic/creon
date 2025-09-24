@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   createProduct,
   getProducts,
@@ -7,43 +7,40 @@ import {
   deleteProduct,
   getProductAnalytics,
   retestProducts,
-  retestAllProducts
-} from '../controllers/productController';
-import { authenticate } from '../middleware/auth';
-import { createLimiter } from '../middleware/rateLimiting';
+  retestAllProducts,
+} from "../controllers/productController";
+import { authenticate } from "../middleware/auth";
+import { createLimiter } from "../middleware/rateLimiting";
 import {
   productValidation,
   paginationValidation,
-  handleValidationErrors
-} from '../middleware/validation';
+  handleValidationErrors,
+} from "../middleware/validation";
 
 const router = Router();
 
 router.use(authenticate);
 
-router.post('/',
+router.post(
+  "/",
   createLimiter,
   productValidation,
   handleValidationErrors,
   createProduct
 );
 
-router.get('/',
-  paginationValidation,
-  handleValidationErrors,
-  getProducts
-);
+router.get("/", paginationValidation, handleValidationErrors, getProducts);
 
-router.get('/:id', getProductById);
+router.get("/:id", getProductById);
 
-router.put('/:id', updateProduct);
+router.put("/:id", updateProduct);
 
-router.delete('/:id', deleteProduct);
+router.delete("/:id", deleteProduct);
 
-router.get('/:id/analytics', getProductAnalytics);
+router.get("/:id/analytics", getProductAnalytics);
 
-router.post('/retest', retestProducts);
+router.post("/retest", retestProducts);
 
-router.post('/retest-all', retestAllProducts);
+router.post("/retest-all", retestAllProducts);
 
 export default router;

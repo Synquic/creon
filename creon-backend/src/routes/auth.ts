@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   register,
   login,
@@ -7,42 +7,44 @@ import {
   logoutAll,
   getProfile,
   checkUsernameAvailability,
-  changePassword
-} from '../controllers/authController';
-import { authenticate } from '../middleware/auth';
-import { authLimiter } from '../middleware/rateLimiting';
+  changePassword,
+} from "../controllers/authController";
+import { authenticate } from "../middleware/auth";
+import { authLimiter } from "../middleware/rateLimiting";
 import {
   registerValidation,
   loginValidation,
-  handleValidationErrors
-} from '../middleware/validation';
+  handleValidationErrors,
+} from "../middleware/validation";
 
 const router = Router();
 
-router.post('/register', 
+router.post(
+  "/register",
   authLimiter,
   registerValidation,
   handleValidationErrors,
   register
 );
 
-router.post('/login',
+router.post(
+  "/login",
   authLimiter,
   loginValidation,
   handleValidationErrors,
   login
 );
 
-router.post('/refresh-token', refreshToken);
+router.post("/refresh-token", refreshToken);
 
-router.post('/logout', authenticate, logout);
+router.post("/logout", authenticate, logout);
 
-router.post('/logout-all', authenticate, logoutAll);
+router.post("/logout-all", authenticate, logoutAll);
 
-router.get('/profile', authenticate, getProfile);
+router.get("/profile", authenticate, getProfile);
 
-router.get('/check-username/:username', checkUsernameAvailability);
+router.get("/check-username/:username", checkUsernameAvailability);
 
-router.post('/change-password', authenticate, changePassword);
+router.post("/change-password", authenticate, changePassword);
 
 export default router;

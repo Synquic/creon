@@ -99,10 +99,7 @@ export const getUsersByRole = async (
   try {
     const { role } = req.params;
 
-    const validRoles: UserRole[] = [
-      "admin",
-      "manager",
-    ];
+    const validRoles: UserRole[] = ["admin", "manager"];
     if (!validRoles.includes(role as UserRole)) {
       res.status(400).json({
         success: false,

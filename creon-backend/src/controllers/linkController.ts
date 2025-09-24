@@ -8,7 +8,7 @@ import { LinkTester } from "../jobs/testLinks";
 // Helper function to get the effective user for profile operations
 const getEffectiveUserId = (user: any): string => {
   // If user is a manager, return their parent's ID
-  if (user?.role === 'manager' && user?.parentUserId) {
+  if (user?.role === "manager" && user?.parentUserId) {
     return user.parentUserId;
   }
   // Otherwise return their own ID
@@ -182,10 +182,25 @@ export const updateLink = async (
   try {
     const { id } = req.params;
     const userId = getEffectiveUserId(req.user);
-    const { title, url, shortCode, description, image, isActive, isWorking, order } =
-      req.body;
+    const {
+      title,
+      url,
+      shortCode,
+      description,
+      image,
+      isActive,
+      isWorking,
+      order,
+    } = req.body;
 
-    let updateData: any = { title, url, description, image, isActive, isWorking };
+    let updateData: any = {
+      title,
+      url,
+      description,
+      image,
+      isActive,
+      isWorking,
+    };
 
     if (order !== undefined) {
       updateData.order = order;
@@ -269,10 +284,11 @@ export const deleteLink = async (
 export const reorderLinks = async (req: Request, res: Response) => {
   try {
     console.log("Reorder links called", { body: req.body });
-    const linkOrders: Array<{ id: string; order: number }> = req.body.linkOrders;
+    const linkOrders: Array<{ id: string; order: number }> =
+      req.body.linkOrders;
 
     if (!Array.isArray(linkOrders)) {
-      return res.status(400).json({ message: 'Invalid input format' });
+      return res.status(400).json({ message: "Invalid input format" });
     }
 
     const bulkOps = linkOrders.map(({ id, order }) => ({
@@ -284,10 +300,12 @@ export const reorderLinks = async (req: Request, res: Response) => {
 
     const result = await Link.bulkWrite(bulkOps);
 
-    return res.status(200).json({ message: 'Links reordered successfully', result });
+    return res
+      .status(200)
+      .json({ message: "Links reordered successfully", result });
   } catch (error) {
-    console.error('Error reordering links:', error);
-    return res.status(500).json({ message: 'Server error' });
+    console.error("Error reordering links:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 export const redirectLink = async (
@@ -398,7 +416,7 @@ export const retestLinks = async (
 ): Promise<void> => {
   try {
     const userId = getEffectiveUserId(req.user);
-    
+
     if (!userId) {
       res.status(401).json({
         success: false,
@@ -406,12 +424,12 @@ export const retestLinks = async (
       });
       return;
     }
-    
+
     logger.info(`Manual link retest requested by user: ${userId}`);
 
     // Test links for the specific user
     const results = await LinkTester.testLinksForUser(userId);
-    
+
     // Get updated stats
     const stats = await LinkTester.getLinkTestStats();
 
@@ -420,8 +438,8 @@ export const retestLinks = async (
       message: "Link testing completed successfully",
       data: {
         tested: results.length,
-        working: results.filter(r => r.isWorking).length,
-        notWorking: results.filter(r => !r.isWorking).length,
+        working: results.filter((r) => r.isWorking).length,
+        notWorking: results.filter((r) => !r.isWorking).length,
         results,
         stats,
       },
@@ -444,7 +462,7 @@ export const retestAllLinks = async (
 
     // Test all links in the system
     const results = await LinkTester.testAllLinks();
-    
+
     // Get updated stats
     const stats = await LinkTester.getLinkTestStats();
 
@@ -453,8 +471,8 @@ export const retestAllLinks = async (
       message: "All links testing completed successfully",
       data: {
         tested: results.length,
-        working: results.filter(r => r.isWorking).length,
-        notWorking: results.filter(r => !r.isWorking).length,
+        working: results.filter((r) => r.isWorking).length,
+        notWorking: results.filter((r) => !r.isWorking).length,
         stats,
       },
     });

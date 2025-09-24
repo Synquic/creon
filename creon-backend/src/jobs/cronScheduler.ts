@@ -1,6 +1,6 @@
-import * as cron from 'node-cron';
-import { runLinkTestingJob } from './testLinks';
-import { logger } from '../index';
+import * as cron from "node-cron";
+import { runLinkTestingJob } from "./testLinks";
+import { logger } from "../index";
 
 export class CronScheduler {
   private static instance: CronScheduler;
@@ -19,49 +19,53 @@ export class CronScheduler {
    * Start all cron jobs
    */
   public startAll(): void {
-    logger.info('Starting cron jobs...');
-    
+    logger.info("Starting cron jobs...");
+
     // Daily link testing at 2 AM
     this.startLinkTestingJob();
-    
-    logger.info('All cron jobs started successfully');
+
+    logger.info("All cron jobs started successfully");
   }
 
   /**
    * Stop all cron jobs
    */
   public stopAll(): void {
-    logger.info('Stopping all cron jobs...');
-    
+    logger.info("Stopping all cron jobs...");
+
     this.jobs.forEach((task, name) => {
       task.stop();
       logger.info(`Stopped cron job: ${name}`);
     });
-    
+
     this.jobs.clear();
-    logger.info('All cron jobs stopped');
+    logger.info("All cron jobs stopped");
   }
 
   /**
    * Start the daily link testing job
    */
   private startLinkTestingJob(): void {
-    const jobName = 'link-testing';
-    
+    const jobName = "link-testing";
+
     // Schedule to run daily at 2:00 AM
     // Cron format: second minute hour day month dayOfWeek
     // '0 2 * * *' = At 2:00 AM every day
-    const task = cron.schedule('0 2 * * *', async () => {
-      logger.info('Starting scheduled link testing job');
-      try {
-        await runLinkTestingJob();
-        logger.info('Scheduled link testing job completed successfully');
-      } catch (error) {
-        logger.error('Scheduled link testing job failed:', error);
+    const task = cron.schedule(
+      "0 2 * * *",
+      async () => {
+        logger.info("Starting scheduled link testing job");
+        try {
+          await runLinkTestingJob();
+          logger.info("Scheduled link testing job completed successfully");
+        } catch (error) {
+          logger.error("Scheduled link testing job failed:", error);
+        }
+      },
+      {
+        timezone: "UTC",
       }
-    }, {
-      timezone: 'UTC'
-    });
+    );
 
     this.jobs.set(jobName, task);
     logger.info(`Started cron job: ${jobName} - Daily at 2:00 AM UTC`);
@@ -71,12 +75,12 @@ export class CronScheduler {
    * Manually trigger the link testing job
    */
   public async triggerLinkTesting(): Promise<void> {
-    logger.info('Manually triggering link testing job');
+    logger.info("Manually triggering link testing job");
     try {
       await runLinkTestingJob();
-      logger.info('Manual link testing job completed successfully');
+      logger.info("Manual link testing job completed successfully");
     } catch (error) {
-      logger.error('Manual link testing job failed:', error);
+      logger.error("Manual link testing job failed:", error);
       throw error;
     }
   }
@@ -86,14 +90,14 @@ export class CronScheduler {
    */
   public getJobsStatus(): { name: string; running: boolean }[] {
     const status: { name: string; running: boolean }[] = [];
-    
+
     this.jobs.forEach((task, name) => {
       status.push({
         name,
-        running: true // node-cron doesn't expose status, assume running if in map
+        running: true, // node-cron doesn't expose status, assume running if in map
       });
     });
-    
+
     return status;
   }
 

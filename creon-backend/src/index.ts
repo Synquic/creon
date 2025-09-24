@@ -129,8 +129,8 @@ app.listen(PORT, () => {
   logger.info(
     `CORS Origin: ${process.env.CORS_ORIGIN || "http://localhost:5174"}`
   );
-  
+
   // Start cron jobs
   cronScheduler.startAll();
-  logger.info('Cron scheduler initialized');
+  logger.info("Cron scheduler initialized");
 });
