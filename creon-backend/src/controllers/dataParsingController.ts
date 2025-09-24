@@ -37,6 +37,7 @@ export const fetchResponse = async (req: AuthRequest, res: Response): Promise<vo
             const response = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
             html = response.data;
         } catch (err) {
+            logger.error('Error fetching product page:', err);
             res.status(502).json({
                 success: false,
                 message: 'Failed to fetch product page HTML.'
@@ -57,7 +58,7 @@ export const fetchResponse = async (req: AuthRequest, res: Response): Promise<vo
     
     // Print content of a div with id="app"
     const appContent = $('#app').html() || 'No #app div found';
-    console.info('Content of #app:', appContent);
+    console.info('Content of #app:', appContent.length);
     
     const finalContent = secondPart + appContent;
     
