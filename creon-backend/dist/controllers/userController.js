@@ -3,11 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDashboardStats = exports.checkUsernameAvailability = exports.getUserProfile = exports.changePassword = exports.updateProfile = void 0;
+exports.getDashboardStats = exports.checkUsernameAvailability = exports.getMeProfile = exports.getUserProfile = exports.changePassword = exports.updateProfile = void 0;
 const models_1 = require("../models");
 const Theme_1 = require("../models/Theme");
 const ShopSettings_1 = __importDefault(require("../models/ShopSettings"));
 const index_1 = require("../index");
+const routes_1 = require("../config/routes");
 const getEffectiveUserId = (user) => {
     if (user?.role === "manager" && user?.parentUserId) {
         return user.parentUserId;
@@ -170,6 +171,22 @@ const getUserProfile = async (req, res) => {
     }
 };
 exports.getUserProfile = getUserProfile;
+const getMeProfile = async (req, res) => {
+    try {
+        const originalParams = req.params;
+        req.params = { username: routes_1.ROUTE_CONFIG.ME_ROUTE_USERNAME };
+        await (0, exports.getUserProfile)(req, res);
+        req.params = originalParams;
+    }
+    catch (error) {
+        index_1.logger.error("Get /me profile error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+exports.getMeProfile = getMeProfile;
 const checkUsernameAvailability = async (req, res) => {
     try {
         const { username } = req.params;

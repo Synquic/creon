@@ -4,6 +4,7 @@ import { AuthRequest } from "../middleware/auth";
 import { Theme } from "../models/Theme";
 import ShopSettings from "../models/ShopSettings";
 import { logger } from "../index";
+import { ROUTE_CONFIG } from "../config/routes";
 
 // Helper function to get the effective user for profile operations
 const getEffectiveUserId = (user: any): string => {
@@ -199,6 +200,30 @@ export const getUserProfile = async (
     });
   } catch (error) {
     logger.error("Get user profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Handler for /me route - serves the configured user's profile
+export const getMeProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    // Temporarily modify the params to use the configured username
+    const originalParams = req.params;
+    req.params = { username: ROUTE_CONFIG.ME_ROUTE_USERNAME };
+
+    // Call the existing getUserProfile function
+    await getUserProfile(req, res);
+
+    // Restore original params (though response will already be sent)
+    req.params = originalParams;
+  } catch (error) {
+    logger.error("Get /me profile error:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
