@@ -58,9 +58,9 @@ const productSchema = z.object({
     .string()
     .url("Please enter a valid URL")
     .min(1, "URL is required"),
-  shortCode: z.string().optional().or(z.literal("")),
+  shortCode: z.string().min(1, "Short code is required"),
   tags: z.array(z.string()).optional(),
-  image: z.string().optional(),
+  image: z.string().min(1, "Product image is required"),
 });
 type ProductFormData = z.infer<typeof productSchema>;
 
@@ -124,7 +124,7 @@ const ShopPage: React.FC = () => {
     formState: { errors: errorsProduct, isSubmitting: isSubmittingProduct },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: { currency: "USD", tags: [] },
+    defaultValues: { currency: "INR", tags: [], image: "", shortCode: "" },
   });
 
   // Auto-parse product from URL (copied from products/page.tsx)
@@ -205,7 +205,7 @@ const ShopPage: React.FC = () => {
           title: "",
           description: "",
           price: 0,
-          currency: "USD",
+          currency: "INR",
           affiliateUrl: url,
           shortCode: "",
           image: "",
@@ -501,22 +501,22 @@ const ShopPage: React.FC = () => {
           {!editingProduct && (
             <div className="flex items-center gap-2 mb-6">
               <Input
-              type="text"
-              className="border rounded-2xl px-3 py-2 flex-1 transition-all hover:border-yellow-400 hover:shadow-[0_0_0_3px_rgba(255,215,0,0.3)]"
-              placeholder="Paste product URL to parse with AI✨..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={parsing}
+                type="text"
+                className="border rounded-2xl px-3 py-2 flex-1 transition-all hover:border-yellow-400 hover:shadow-[0_0_0_3px_rgba(255,215,0,0.3)]"
+                placeholder="Paste product URL to parse with AI✨..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={parsing}
               />
               <Button onClick={handleParseUrl} disabled={!url || parsing}>
-              {parsing ? (
-                <span className="flex items-center gap-2">
-                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-                Parsing...
-                </span>
-              ) : (
-                "Parse with AI✨"
-              )}
+                {parsing ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                    Parsing...
+                  </span>
+                ) : (
+                  "Parse with AI✨"
+                )}
               </Button>
             </div>
           )}
@@ -549,9 +549,14 @@ const ShopPage: React.FC = () => {
 
                 <form
                   onSubmit={handleSubmitProduct((data) => {
+                    const productImage = currentProductImage || data.image;
+                    if (!productImage) {
+                      toast.error("Product image is required");
+                      return;
+                    }
                     const cleanData = {
                       ...data,
-                      image: currentProductImage || data.image,
+                      image: productImage,
                     };
                     if (editingProduct) {
                       updateProductMutation.mutate({
@@ -567,11 +572,17 @@ const ShopPage: React.FC = () => {
                   {/* Product Image */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Product Image
+                      Product Image <span className="text-red-500">*</span>
                     </label>
                     <div className="flex items-center space-x-6">
                       <div className="relative">
-                        <div className="w-24 h-24 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
+                        <div
+                          className={`w-24 h-24 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden ${
+                            errorsProduct.image
+                              ? "border-2 border-red-300"
+                              : "border-2 border-transparent"
+                          }`}
+                        >
                           {currentProductImage ? (
                             <img
                               src={currentProductImage}
@@ -598,13 +609,37 @@ const ShopPage: React.FC = () => {
                                 toast.error("Image size must be less than 5MB");
                                 return;
                               }
-                              setCurrentProductImage(URL.createObjectURL(file));
+                              const imageUrl = URL.createObjectURL(file);
+                              setCurrentProductImage(imageUrl);
+                              setValueProduct("image", imageUrl, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
                             }}
                             className="hidden"
                           />
                         </label>
                       </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Upload a product image to showcase your item
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Supported formats: JPG, PNG, GIF (max 5MB)
+                        </p>
+                      </div>
                     </div>
+                    {errorsProduct.image && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {errorsProduct.image.message}
+                      </p>
+                    )}
+                    {/* Hidden input for form registration */}
+                    <input
+                      {...registerProduct("image")}
+                      type="hidden"
+                      value={currentProductImage || ""}
+                    />
                   </div>
 
                   <Input
@@ -635,7 +670,7 @@ const ShopPage: React.FC = () => {
                   />
                   <Input
                     {...registerProduct("shortCode")}
-                    label="Custom Short Code (Optional)"
+                    label="Custom Short Code *"
                     placeholder="amazing-product"
                     error={errorsProduct.shortCode?.message}
                   />
