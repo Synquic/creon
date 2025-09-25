@@ -98,8 +98,11 @@ export default function UsersPage() {
   const resetPasswordMutation = useMutation({
     mutationFn: (id: string) => subUserService.resetPassword(id),
     onSuccess: (response) => {
+      navigator.clipboard.writeText(
+        `New Password: ${response.data.newPassword}`
+      );
       toast.success(
-        `Password reset successfully! New password: ${response.data.newPassword}`,
+        `Password reset successfully! New password: ${response.data.newPassword} \n (📋copied to clipboard)`,
         {
           duration: 10000,
         }
@@ -391,11 +394,6 @@ export default function UsersPage() {
                       >
                         {user.role}
                       </span>
-                      {user.isFirstLogin && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          First Login Pending
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>

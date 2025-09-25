@@ -25,6 +25,7 @@ import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import { ProductsService } from "@/services/product";
 import { collectionService } from "@/services/collections";
+import { shopService } from "@/services/shop";
 // import { authService } from "@/services/auth";
 
 // --- Product Types & Schema ---
@@ -93,22 +94,35 @@ const ShopPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"products" | "collections">(
     "products"
   );
-  // Shop enabled toggle (persisted in localStorage for demo)
-  const [shopEnabled, setShopEnabled] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("creon_shop_enabled");
-      return stored === null ? true : stored === "true";
-    }
-    return true;
+
+  // General
+  const queryClient = useQueryClient();
+
+  // Shop settings query
+  const { data: shopSettingsData, isLoading: shopSettingsLoading } = useQuery({
+    queryKey: ["shopSettings"],
+    queryFn: () => shopService.getShopSettings(),
   });
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "creon_shop_enabled",
-        shopEnabled ? "true" : "false"
-      );
-    }
-  }, [shopEnabled]);
+
+  const shopSettings = shopSettingsData?.data?.data?.settings;
+  const shopEnabled = shopSettings?.isVisible ?? false;
+
+  // Shop settings mutation
+  const updateShopSettingsMutation = useMutation({
+    mutationFn: (settings: { isVisible: boolean }) =>
+      shopService.updateShopSettings(settings),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shopSettings"] });
+      toast.success("Shop settings updated successfully!");
+    },
+    onError: () => {
+      toast.error("Failed to update shop settings");
+    },
+  });
+
+  const handleShopEnabledToggle = () => {
+    updateShopSettingsMutation.mutate({ isVisible: !shopEnabled });
+  };
   // Product state
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -240,8 +254,6 @@ const ShopPage: React.FC = () => {
   >(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  // General
-  const queryClient = useQueryClient();
 
   // --- Products Query ---
   const {
@@ -458,8 +470,9 @@ const ShopPage: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold mb-1">Manage your Shop</h2>
           <p className="text-gray-600 text-sm">
-            Add products and collections to showcase in your public profile. Use
-            the toggle to enable or disable your shop for visitors.
+            Add products and collections to your public profile, Products show
+            after links by default. <br /> Use the toggle to show or hide your
+            shop tab for visitors.
           </p>
         </div>
         <label className="flex items-center cursor-pointer select-none">
@@ -470,7 +483,8 @@ const ShopPage: React.FC = () => {
             <input
               type="checkbox"
               checked={shopEnabled}
-              onChange={() => setShopEnabled((v) => !v)}
+              onChange={handleShopEnabledToggle}
+              disabled={updateShopSettingsMutation.isPending}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-primary transition-colors"></div>
@@ -609,7 +623,7 @@ const ShopPage: React.FC = () => {
                             <img
                               src={currentProductImage}
                               alt="Product preview"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                           ) : (
                             <ShoppingBagIcon className="w-10 h-10 text-gray-400" />
@@ -766,7 +780,7 @@ const ShopPage: React.FC = () => {
                       <img
                         src={product.image}
                         alt={product.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     ) : (
                       <ShoppingBagIcon className="w-10 h-10 text-gray-400" />
@@ -897,7 +911,7 @@ const ShopPage: React.FC = () => {
                             <img
                               src={currentCollectionImage}
                               alt="Collection preview"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                           ) : (
                             <BoxesIcon className="w-10 h-10 text-gray-400" />
@@ -1011,7 +1025,7 @@ const ShopPage: React.FC = () => {
                                     <img
                                       src={product.image}
                                       alt={product.title}
-                                      className="h-8 w-8 object-cover rounded mr-3"
+                                      className="h-8 w-8 object-contain rounded mr-3"
                                     />
                                   )}
                                   <div>
@@ -1104,7 +1118,7 @@ const ShopPage: React.FC = () => {
                       <img
                         src={collection.image}
                         alt={collection.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     ) : (
                       <BoxesIcon className="w-10 h-10 text-gray-400" />

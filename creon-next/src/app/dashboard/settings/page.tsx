@@ -62,8 +62,6 @@ const SettingsPage: React.FC = () => {
   const onSubmit = (data: PasswordFormData) => {
     const { confirmPassword, ...passwordData } = data;
     changePasswordMutation.mutate(passwordData);
-    toast.success("Password change functionality is not implemented yet");
-    console.log("Password change data:", confirmPassword);
   };
 
   const handleDeleteAccount = async () => {
