@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
-// import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { LinkIcon, ShareIcon, ShoppingBagIcon, UserIcon } from "lucide-react";
 import Card from "@/components/ui/card";
@@ -11,6 +11,7 @@ import VideoThumbnail from "../../components/VideoThumbnail";
 import { getVideoInfo } from "../../utils/videoUtils";
 // import { authService } from "@/services/auth";
 import { analyticsService } from "@/services/analytics";
+import { shopService } from "@/services/shop";
 
 interface Link {
   _id: string;
@@ -86,14 +87,22 @@ export default function ClientProfilePage({
   // const theme = useMemo(() => { ... }, [profileData?.data?.user?.theme]);
   // ...rest of the code
 
-  // Shop enabled toggle (read from localStorage)
-  const [shopEnabled, setShopEnabled] = useState<boolean>(true);
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("creon_shop_enabled");
-      setShopEnabled(stored === null ? true : stored === "true");
-    }
-  }, []);
+  // Get the user ID from profile data to fetch shop settings
+  const userId = profileData?.data?.user?.id;
+
+  // Shop settings query - fetch from API instead of localStorage
+  const {
+    data: shopSettingsData,
+    // error: shopSettingsError,
+  } = useQuery({
+    queryKey: ["publicShopSettings", userId],
+    queryFn: () => shopService.getPublicShopSettings(userId),
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const shopSettings = shopSettingsData?.data?.data?.settings;
+  const shopEnabled = shopSettings?.isVisible ?? false;
 
   const [activeTab, setActiveTab] = useState<"links" | "shop">("links");
   const [expandedCollections, setExpandedCollections] = useState<string[]>([]);
@@ -189,6 +198,23 @@ export default function ClientProfilePage({
     }
   }, [profileData?.data?.data?.user?.id]);
 
+  // Initialize collections to be expanded by default - only 1 or 3 products
+  useEffect(() => {
+    if (collections && collections.length > 0 && products) {
+      const collectionsToExpand = collections
+        .filter((collection: ProductCollection) => {
+          const collectionProducts = products.filter((p: Product) =>
+            collection.products?.includes(p._id)
+          );
+          const productCount = collectionProducts.length;
+          return productCount === 1 || productCount === 3;
+        })
+        .map((c: ProductCollection) => c._id);
+
+      setExpandedCollections(collectionsToExpand);
+    }
+  }, [collections, products]);
+
   const handleLinkClick = async (link: Link) => {
     // Track click analytics
     try {
@@ -217,6 +243,31 @@ export default function ClientProfilePage({
 
     // Redirect to affiliate URL
     window.open(product.affiliateUrl, "_blank");
+  };
+
+  // Helper function to generate composite collection image
+  const generateCompositeCollectionImage = (collection: ProductCollection) => {
+    if (collection.image) {
+      return collection.image;
+    }
+
+    // Return null to indicate we need to render a composite div
+    // (we'll handle the composite rendering in JSX)
+    return null;
+  };
+
+  // Helper function to get products with images for composite rendering
+  const getCompositeProducts = (collection: ProductCollection) => {
+    const collectionProducts =
+      products?.filter((p: Product) => collection.products?.includes(p._id)) ||
+      [];
+
+    const productsWithImages = collectionProducts.filter(
+      (p: Product) => p.image
+    );
+
+    // Return maximum 4 products for composite
+    return productsWithImages.slice(0, 4);
   };
 
   if (!profileData || !user) {
@@ -753,97 +804,522 @@ export default function ClientProfilePage({
           </div>
         )}
 
-        {/* If shop is disabled, show all products/collections after links */}
-        {!shopEnabled &&
-          ((products && products.length > 0) ||
-            (collections && collections.length > 0)) && (
-            <div className="mb-8">
-              {/* Collections */}
-              {collections && collections.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-bold mb-2 flex items-center">
-                    <ShoppingBagIcon className="w-5 h-5 mr-2" />
-                    Collections
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {collections.map((collection: ProductCollection) => (
-                      <div
-                        key={collection._id}
-                        className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-                      >
-                        {collection.image ? (
-                          <img
-                            src={collection.image}
-                            alt={collection.title}
-                            className="w-full h-32 object-cover"
-                          />
-                        ) : (
-                          <div className="h-32 flex items-center justify-center bg-gray-100">
-                            <ShoppingBagIcon className="w-10 h-10 text-gray-400" />
+        {/* Collections when shop is disabled - use same expanded style as shop tab */}
+        {!shopEnabled && collections && collections.length > 0 && (
+          <div className={`mb-8 ${linkSpacingClass}`}>
+            {collections.map((collection: ProductCollection, index: number) => {
+              // Create a unique ID for this collection for expansion tracking
+              const collectionId = collection._id;
+              const isExpanded = expandedCollections.includes(collectionId);
+              const collectionProducts =
+                products?.filter((p: Product) =>
+                  collection.products?.includes(p._id)
+                ) || [];
+              const productCount = collectionProducts.length;
+
+              // Function to toggle expansion state
+              const toggleExpand = () => {
+                setExpandedCollections((prev) =>
+                  isExpanded
+                    ? prev.filter((id) => id !== collectionId)
+                    : [...prev, collectionId]
+                );
+              };
+
+              return (
+                <motion.div
+                  key={collection._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="mb-4"
+                >
+                  {/* Collection Card - styled similarly to links for consistency */}
+                  <div
+                    onClick={toggleExpand}
+                    className={`cursor-pointer transition-all duration-200 overflow-hidden ${
+                      theme.buttonAnimation === "hover-lift"
+                        ? "hover:-translate-y-1"
+                        : theme.buttonAnimation === "hover-scale"
+                        ? "hover:scale-[1.02]"
+                        : theme.buttonAnimation === "hover-glow"
+                        ? "hover:shadow-lg"
+                        : "hover:shadow-md"
+                    }`}
+                    style={{
+                      backgroundColor: theme.backgroundColor || "#ffffff",
+                      borderColor: theme.primaryColor
+                        ? `${theme.primaryColor}20`
+                        : "#e5e7eb",
+                      borderWidth: `${theme.buttonBorderWidth || 1}px`,
+                      borderStyle: "solid",
+                      borderRadius: getLinkButtonRadius(),
+                      boxShadow: theme.buttonShadow
+                        ? "0 2px 4px rgba(0, 0, 0, 0.1)"
+                        : "none",
+                    }}
+                  >
+                    {/* Collection Image Area */}
+                    {generateCompositeCollectionImage(collection) ? (
+                      <div className="relative">
+                        <img
+                          src={generateCompositeCollectionImage(collection)!}
+                          alt={collection.title}
+                          className="w-full h-48 object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                          <div className="flex justify-between items-end w-full">
+                            <div>
+                              <h2
+                                className="text-xl font-bold text-white mb-1"
+                                style={{
+                                  fontFamily: `"${
+                                    theme.fontFamily || "Inter"
+                                  }", system-ui, -apple-system, sans-serif`,
+                                  fontSize:
+                                    theme.fontSize === "small"
+                                      ? "18px"
+                                      : theme.fontSize === "large"
+                                      ? "24px"
+                                      : "20px",
+                                  fontWeight:
+                                    theme.fontWeight === "light"
+                                      ? 300
+                                      : theme.fontWeight === "medium"
+                                      ? 500
+                                      : theme.fontWeight === "semibold"
+                                      ? 600
+                                      : theme.fontWeight === "bold"
+                                      ? 700
+                                      : 400,
+                                }}
+                              >
+                                {collection.title}
+                              </h2>
+                              {collection.description && (
+                                <p
+                                  className="text-white/80 text-sm line-clamp-2"
+                                  style={{
+                                    fontFamily: `"${
+                                      theme.fontFamily || "Inter"
+                                    }", system-ui, -apple-system, sans-serif`,
+                                    fontSize:
+                                      theme.fontSize === "small"
+                                        ? "12px"
+                                        : theme.fontSize === "large"
+                                        ? "16px"
+                                        : "14px",
+                                  }}
+                                >
+                                  {collection.description}
+                                </p>
+                              )}
+                            </div>
+                            {productCount > 0 && (
+                              <div className="flex items-center bg-white/20 rounded-full p-1 backdrop-blur-sm">
+                                <span className="text-white text-xs font-medium mr-1">
+                                  {productCount}{" "}
+                                  {productCount === 1 ? "item" : "items"}
+                                </span>
+                                <svg
+                                  className={`w-4 h-4 text-white transition-transform ${
+                                    isExpanded ? "rotate-180" : ""
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 9l-7 7-7-7"
+                                  />
+                                </svg>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <div className="p-4">
-                          <h4 className="font-semibold text-base mb-1">
-                            {collection.title}
-                          </h4>
-                          {collection.description && (
-                            <p className="text-gray-600 text-sm mb-2">
-                              {collection.description}
-                            </p>
-                          )}
-                          <span className="text-xs text-gray-500">
-                            {collection.products.length} products
-                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Products */}
-              {products && products.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-bold mb-2 flex items-center">
-                    <ShoppingBagIcon className="w-5 h-5 mr-2" />
-                    Products
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {products.map((product: Product) => (
-                      <div
-                        key={product._id}
-                        className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
-                      >
-                        {product.image ? (
-                          <img
-                            src={product.image}
-                            alt={product.title}
-                            className="w-full h-32 object-cover"
-                          />
-                        ) : (
-                          <div className="h-32 flex items-center justify-center bg-gray-100">
-                            <ShoppingBagIcon className="w-10 h-10 text-gray-400" />
-                          </div>
-                        )}
-                        <div className="p-4">
-                          <h4 className="font-semibold text-base mb-1">
-                            {product.title}
-                          </h4>
-                          {product.description && (
-                            <p className="text-gray-600 text-sm mb-2">
-                              {product.description}
-                            </p>
+                    ) : getCompositeProducts(collection).length > 0 ? (
+                      <div className="relative">
+                        <div
+                          className={`w-full h-48 grid gap-1 ${
+                            getCompositeProducts(collection).length === 1
+                              ? "grid-cols-1"
+                              : getCompositeProducts(collection).length === 2
+                              ? "grid-cols-2"
+                              : getCompositeProducts(collection).length === 3
+                              ? "grid-cols-3"
+                              : "grid-cols-2 grid-rows-2"
+                          }`}
+                        >
+                          {getCompositeProducts(collection).map(
+                            (product: Product, idx: number) => (
+                              <img
+                                key={idx}
+                                src={product.image}
+                                alt={product.title}
+                                className="w-full h-full object-cover"
+                                style={{
+                                  borderTopLeftRadius:
+                                    idx === 0 ? getLinkButtonRadius() : "0",
+                                  borderTopRightRadius:
+                                    getCompositeProducts(collection).length ===
+                                      1 ||
+                                    (getCompositeProducts(collection).length ===
+                                      2 &&
+                                      idx === 1) ||
+                                    (getCompositeProducts(collection).length ===
+                                      3 &&
+                                      idx === 2) ||
+                                    (getCompositeProducts(collection).length ===
+                                      4 &&
+                                      idx === 1)
+                                      ? getLinkButtonRadius()
+                                      : "0",
+                                }}
+                              />
+                            )
                           )}
-                          <span className="text-xs text-gray-500">
-                            {product.currency} {product.price}
-                          </span>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                          <div className="flex justify-between items-end w-full">
+                            <div>
+                              <h2
+                                className="text-xl font-bold text-white mb-1"
+                                style={{
+                                  fontFamily: `"${
+                                    theme.fontFamily || "Inter"
+                                  }", system-ui, -apple-system, sans-serif`,
+                                  fontSize:
+                                    theme.fontSize === "small"
+                                      ? "18px"
+                                      : theme.fontSize === "large"
+                                      ? "24px"
+                                      : "20px",
+                                  fontWeight:
+                                    theme.fontWeight === "light"
+                                      ? 300
+                                      : theme.fontWeight === "medium"
+                                      ? 500
+                                      : theme.fontWeight === "semibold"
+                                      ? 600
+                                      : theme.fontWeight === "bold"
+                                      ? 700
+                                      : 400,
+                                }}
+                              >
+                                {collection.title}
+                              </h2>
+                              {collection.description && (
+                                <p
+                                  className="text-white/80 text-sm line-clamp-2"
+                                  style={{
+                                    fontFamily: `"${
+                                      theme.fontFamily || "Inter"
+                                    }", system-ui, -apple-system, sans-serif`,
+                                    fontSize:
+                                      theme.fontSize === "small"
+                                        ? "12px"
+                                        : theme.fontSize === "large"
+                                        ? "16px"
+                                        : "14px",
+                                  }}
+                                >
+                                  {collection.description}
+                                </p>
+                              )}
+                            </div>
+                            {productCount > 0 && (
+                              <div className="flex items-center bg-white/20 rounded-full p-1 backdrop-blur-sm">
+                                <span className="text-white text-xs font-medium mr-1">
+                                  {productCount}{" "}
+                                  {productCount === 1 ? "item" : "items"}
+                                </span>
+                                <svg
+                                  className={`w-4 h-4 text-white transition-transform ${
+                                    isExpanded ? "rotate-180" : ""
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 9l-7 7-7-7"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    ))}
+                    ) : (
+                      <div
+                        className="p-4"
+                        style={{
+                          backgroundColor: theme.backgroundColor || "#ffffff",
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center mr-3"
+                              style={{
+                                backgroundColor: `${
+                                  theme.primaryColor || "#16a34a"
+                                }20`,
+                              }}
+                            >
+                              <ShoppingBagIcon
+                                className="w-5 h-5"
+                                style={{
+                                  color: theme.primaryColor || "#16a34a",
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <h3
+                                className="font-semibold"
+                                style={{
+                                  color: theme.textColor || "#1f2937",
+                                  fontFamily: `"${
+                                    theme.fontFamily || "Inter"
+                                  }", system-ui, -apple-system, sans-serif`,
+                                  fontSize:
+                                    theme.fontSize === "small"
+                                      ? "14px"
+                                      : theme.fontSize === "large"
+                                      ? "18px"
+                                      : "16px",
+                                }}
+                              >
+                                {collection.title}
+                              </h3>
+                              {collection.description && (
+                                <p
+                                  className="text-sm line-clamp-1"
+                                  style={{
+                                    color: theme.textColor || "#6b7280",
+                                    opacity: 0.7,
+                                  }}
+                                >
+                                  {collection.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            {productCount > 0 && (
+                              <div className="flex items-center mr-2">
+                                <span
+                                  className="text-sm font-medium mr-1"
+                                  style={{
+                                    color: theme.textColor || "#6b7280",
+                                    opacity: 0.8,
+                                  }}
+                                >
+                                  {productCount}{" "}
+                                  {productCount === 1 ? "item" : "items"}
+                                </span>
+                              </div>
+                            )}
+                            <div
+                              style={{
+                                color: theme.textColor || "#9ca3af",
+                                opacity: 0.5,
+                              }}
+                            >
+                              <svg
+                                className={`w-5 h-5 transition-transform ${
+                                  isExpanded ? "rotate-180" : ""
+                                }`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+
+                  {/* Expandable Products Container */}
+                  <motion.div
+                    initial="collapsed"
+                    animate={isExpanded ? "expanded" : "collapsed"}
+                    variants={{
+                      expanded: { opacity: 1, height: "auto", marginTop: 16 },
+                      collapsed: { opacity: 0, height: 0, marginTop: 0 },
+                    }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      {collectionProducts.length === 0 ? (
+                        <div
+                          className="col-span-2 text-center py-6 rounded-lg"
+                          style={{
+                            backgroundColor: `${
+                              theme.backgroundColor || "#ffffff"
+                            }`,
+                            border: `1px dashed ${
+                              theme.primaryColor
+                                ? `${theme.primaryColor}40`
+                                : "#e5e7eb"
+                            }`,
+                            borderRadius: getLinkButtonRadius(),
+                          }}
+                        >
+                          <ShoppingBagIcon
+                            className="w-8 h-8 mx-auto mb-2 opacity-60"
+                            style={{ color: theme.primaryColor || "#16a34a" }}
+                          />
+                          <p
+                            style={{
+                              color: theme.textColor || "#6b7280",
+                              opacity: 0.7,
+                              fontFamily: `"${
+                                theme.fontFamily || "Inter"
+                              }", system-ui, -apple-system, sans-serif`,
+                            }}
+                          >
+                            No products in this collection yet
+                          </p>
+                        </div>
+                      ) : (
+                        /* Display products that belong to this collection */
+                        collectionProducts.map((product: Product) => (
+                          <motion.div
+                            key={product._id}
+                            whileHover={{
+                              scale:
+                                theme.buttonAnimation === "hover-scale"
+                                  ? 1.03
+                                  : 1,
+                              y:
+                                theme.buttonAnimation === "hover-lift" ? -5 : 0,
+                              boxShadow:
+                                theme.buttonAnimation === "hover-glow"
+                                  ? "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+                                  : "",
+                            }}
+                            className="cursor-pointer overflow-hidden transition-all duration-300"
+                            onClick={() => handleProductClick(product)}
+                            style={{
+                              backgroundColor:
+                                theme.backgroundColor || "#ffffff",
+                              borderRadius: getLinkButtonRadius(),
+                              boxShadow: theme.buttonShadow
+                                ? "0 2px 5px rgba(0, 0, 0, 0.08)"
+                                : "none",
+                              border: `${
+                                theme.buttonBorderWidth || 1
+                              }px solid ${
+                                theme.primaryColor
+                                  ? `${theme.primaryColor}20`
+                                  : "#e5e7eb"
+                              }`,
+                            }}
+                          >
+                            <div className="relative">
+                              <img
+                                src={product.image}
+                                alt={product.title}
+                                className="w-full object-contain"
+                                style={{
+                                  borderTopLeftRadius: getLinkButtonRadius(),
+                                  borderTopRightRadius: getLinkButtonRadius(),
+                                }}
+                              />
+                              <div
+                                className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent"
+                                style={{
+                                  borderBottomLeftRadius: getLinkButtonRadius(),
+                                  borderBottomRightRadius:
+                                    getLinkButtonRadius(),
+                                }}
+                              ></div>
+                            </div>
+                            <div className="p-3">
+                              <h4
+                                className="font-semibold text-sm mb-1 line-clamp-2"
+                                style={{
+                                  color: theme.textColor || "#1f2937",
+                                  fontFamily: `"${
+                                    theme.fontFamily || "Inter"
+                                  }", system-ui, -apple-system, sans-serif`,
+                                  fontSize:
+                                    theme.fontSize === "small"
+                                      ? "12px"
+                                      : theme.fontSize === "large"
+                                      ? "16px"
+                                      : "14px",
+                                  fontWeight: theme.fontWeight || "normal",
+                                }}
+                              >
+                                {product.title}
+                              </h4>
+                              {product.price && (
+                                <div className="flex items-center justify-between mt-1">
+                                  <p
+                                    className="font-bold"
+                                    style={{
+                                      color: theme.primaryColor || "#16a34a",
+                                      fontSize:
+                                        theme.fontSize === "small"
+                                          ? "12px"
+                                          : theme.fontSize === "large"
+                                          ? "16px"
+                                          : "14px",
+                                    }}
+                                  >
+                                    {product.currency === "INR"
+                                      ? `₹${product.price.toFixed(2)}`
+                                      : product.currency === "USD"
+                                      ? `$${product.price.toFixed(2)}`
+                                      : `${
+                                          product.currency
+                                        } ${product.price.toFixed(2)}`}
+                                  </p>
+                                  <button
+                                    className="text-xs py-1 px-2 rounded-full"
+                                    style={{
+                                      backgroundColor: `${
+                                        theme.primaryColor || "#16a34a"
+                                      }20`,
+                                      color: theme.primaryColor || "#16a34a",
+                                      fontFamily: `"${
+                                        theme.fontFamily || "Inter"
+                                      }", system-ui, -apple-system, sans-serif`,
+                                    }}
+                                  >
+                                    Shop Now
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Product Collections */}
         {activeTab === "shop" && collections && collections.length > 0 && (
@@ -901,13 +1377,129 @@ export default function ClientProfilePage({
                     }}
                   >
                     {/* Collection Image Area */}
-                    {collection.image ? (
+                    {generateCompositeCollectionImage(collection) ? (
                       <div className="relative">
                         <img
-                          src={collection.image}
+                          src={generateCompositeCollectionImage(collection)!}
                           alt={collection.title}
                           className="w-full h-48 object-cover"
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                          <div className="flex justify-between items-end w-full">
+                            <div>
+                              <h2
+                                className="text-xl font-bold text-white mb-1"
+                                style={{
+                                  fontFamily: `"${
+                                    theme.fontFamily || "Inter"
+                                  }", system-ui, -apple-system, sans-serif`,
+                                  fontSize:
+                                    theme.fontSize === "small"
+                                      ? "18px"
+                                      : theme.fontSize === "large"
+                                      ? "24px"
+                                      : "20px",
+                                  fontWeight:
+                                    theme.fontWeight === "light"
+                                      ? 300
+                                      : theme.fontWeight === "medium"
+                                      ? 500
+                                      : theme.fontWeight === "semibold"
+                                      ? 600
+                                      : theme.fontWeight === "bold"
+                                      ? 700
+                                      : 400,
+                                }}
+                              >
+                                {collection.title}
+                              </h2>
+                              {collection.description && (
+                                <p
+                                  className="text-white/80 text-sm line-clamp-2"
+                                  style={{
+                                    fontFamily: `"${
+                                      theme.fontFamily || "Inter"
+                                    }", system-ui, -apple-system, sans-serif`,
+                                    fontSize:
+                                      theme.fontSize === "small"
+                                        ? "12px"
+                                        : theme.fontSize === "large"
+                                        ? "16px"
+                                        : "14px",
+                                  }}
+                                >
+                                  {collection.description}
+                                </p>
+                              )}
+                            </div>
+                            {productCount > 0 && (
+                              <div className="flex items-center bg-white/20 rounded-full p-1 backdrop-blur-sm">
+                                <span className="text-white text-xs font-medium mr-1">
+                                  {productCount}{" "}
+                                  {productCount === 1 ? "item" : "items"}
+                                </span>
+                                <svg
+                                  className={`w-4 h-4 text-white transition-transform ${
+                                    isExpanded ? "rotate-180" : ""
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 9l-7 7-7-7"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : getCompositeProducts(collection).length > 0 ? (
+                      <div className="relative">
+                        <div
+                          className={`w-full h-48 grid gap-1 ${
+                            getCompositeProducts(collection).length === 1
+                              ? "grid-cols-1"
+                              : getCompositeProducts(collection).length === 2
+                              ? "grid-cols-2"
+                              : getCompositeProducts(collection).length === 3
+                              ? "grid-cols-3"
+                              : "grid-cols-2 grid-rows-2"
+                          }`}
+                        >
+                          {getCompositeProducts(collection).map(
+                            (product: Product, idx: number) => (
+                              <img
+                                key={idx}
+                                src={product.image}
+                                alt={product.title}
+                                className="w-full h-full object-cover"
+                                style={{
+                                  borderTopLeftRadius:
+                                    idx === 0 ? getLinkButtonRadius() : "0",
+                                  borderTopRightRadius:
+                                    getCompositeProducts(collection).length ===
+                                      1 ||
+                                    (getCompositeProducts(collection).length ===
+                                      2 &&
+                                      idx === 1) ||
+                                    (getCompositeProducts(collection).length ===
+                                      3 &&
+                                      idx === 2) ||
+                                    (getCompositeProducts(collection).length ===
+                                      4 &&
+                                      idx === 1)
+                                      ? getLinkButtonRadius()
+                                      : "0",
+                                }}
+                              />
+                            )
+                          )}
+                        </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
                           <div className="flex justify-between items-end w-full">
                             <div>
@@ -1338,20 +1930,18 @@ export default function ClientProfilePage({
           transition={{ duration: 0.5, delay: 0.8 }}
           className="text-center mt-12 py-8"
         >
-          {!theme.hideBranding && (
-            <p className="text-gray-500 text-sm">
-              Powered by{" "}
-              <Link
-                href="/"
-                className="font-medium transition-colors"
-                style={{
-                  color: theme.accentColor || "#8b5cf6",
-                }}
-              >
-                Creon
-              </Link>
-            </p>
-          )}
+          <p className="text-gray-500 text-sm">
+            Powered by{" "}
+            <Link
+              href="https://synquic.com/"
+              className="font-medium transition-colors"
+              style={{
+                color: "green",
+              }}
+            >
+              Synquic
+            </Link>
+          </p>
         </motion.div>
       </div>
     </div>
