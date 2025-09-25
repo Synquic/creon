@@ -499,9 +499,8 @@ const ShopPage: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold mb-1">Manage your Shop</h2>
           <p className="text-gray-600 text-sm">
-            Add products and collections to your public profile, Products show
-            after links by default. <br /> Use the toggle to show or hide your
-            shop tab for visitors.
+            Add products and collections to your public profile, Use the toggle
+            to show or hide your shop tab for visitors.
           </p>
         </div>
         <label className="flex items-center cursor-pointer select-none">

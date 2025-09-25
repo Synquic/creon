@@ -102,7 +102,8 @@ export default function ClientProfilePage({
   });
 
   const shopSettings = shopSettingsData?.data?.data?.settings;
-  const shopEnabled = shopSettings?.isVisible ?? false;
+  const shopEnabled = shopSettings?.isVisible ?? true;
+  console.log("Fetched shop settings:", shopEnabled);
 
   const [activeTab, setActiveTab] = useState<"links" | "shop">("links");
   const [expandedCollections, setExpandedCollections] = useState<string[]>([]);
