@@ -419,6 +419,35 @@ const ShopPage: React.FC = () => {
     }
   }, [editingCollection, showCollectionForm, setValueCollection]);
 
+  // Helper function to generate composite collection image
+  const generateCompositeCollectionImage = (collection: Collection) => {
+    if (collection.image) {
+      return collection.image;
+    }
+
+    // Return null to indicate we need to render a composite div
+    // (we'll handle the composite rendering in JSX)
+    return null;
+  };
+
+  // Helper function to get products with images for composite rendering
+  const getCompositeProducts = (collection: Collection) => {
+    if (!collection.products || !products) return [];
+
+    const collectionProducts = products.filter((p: Product) => {
+      // Handle both string IDs and Product objects in collection.products
+      const productIds = collection.products.map((item) =>
+        typeof item === "string" ? item : item._id
+      );
+      const isInCollection = productIds.includes(p._id);
+      const hasImage = p.image && p.image.trim() !== "";
+      return isInCollection && hasImage;
+    });
+
+    // Return maximum 4 products for composite
+    return collectionProducts.slice(0, 4);
+  };
+
   // --- Handlers ---
   // Product
   const handleEditProduct = (product: Product) => {
@@ -972,7 +1001,7 @@ const ShopPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Select Products
                     </label>
-                    <div className="mb-2">
+                    <div className="mb-4">
                       <input
                         type="text"
                         placeholder="Search products by name..."
@@ -981,13 +1010,13 @@ const ShopPage: React.FC = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       />
                     </div>
-                    <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
+                    <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-3">
                       {productsLoading ? (
-                        <div className="flex items-center justify-center p-4">
+                        <div className="flex items-center justify-center p-8">
                           <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary-200 border-t-primary-700"></div>
                         </div>
                       ) : products.length ? (
-                        <div className="divide-y divide-gray-200">
+                        <div className="grid grid-cols-2 gap-3">
                           {products
                             .filter((product) =>
                               product.title
@@ -997,42 +1026,42 @@ const ShopPage: React.FC = () => {
                             .map((product) => (
                               <div
                                 key={product._id}
-                                className="flex items-center p-3 hover:bg-gray-50"
+                                onClick={() => {
+                                  const updatedSelection =
+                                    selectedProducts.includes(product._id)
+                                      ? selectedProducts.filter(
+                                          (id) => id !== product._id
+                                        )
+                                      : [...selectedProducts, product._id];
+                                  setSelectedProducts(updatedSelection);
+                                  setValueCollection(
+                                    "products",
+                                    updatedSelection
+                                  );
+                                }}
+                                className={`cursor-pointer p-3 rounded-lg border-2 transition-all hover:shadow-md ${
+                                  selectedProducts.includes(product._id)
+                                    ? "border-blue-500 bg-blue-50"
+                                    : "border-gray-200 hover:border-gray-300"
+                                }`}
                               >
-                                <input
-                                  type="checkbox"
-                                  id={`product-${product._id}`}
-                                  checked={selectedProducts.includes(
-                                    product._id
-                                  )}
-                                  onChange={() => {
-                                    const updatedSelection =
-                                      selectedProducts.includes(product._id)
-                                        ? selectedProducts.filter(
-                                            (id) => id !== product._id
-                                          )
-                                        : [...selectedProducts, product._id];
-                                    setSelectedProducts(updatedSelection);
-                                    setValueCollection(
-                                      "products",
-                                      updatedSelection
-                                    );
-                                  }}
-                                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                                />
-                                <div className="ml-3 flex items-center">
-                                  {product.image && (
-                                    <img
-                                      src={product.image}
-                                      alt={product.title}
-                                      className="h-8 w-8 object-contain rounded mr-3"
-                                    />
-                                  )}
-                                  <div>
-                                    <p className="font-medium text-gray-900">
+                                <div className="flex flex-col items-center text-center space-y-2">
+                                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                    {product.image ? (
+                                      <img
+                                        src={product.image}
+                                        alt={product.title}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    ) : (
+                                      <ShoppingBagIcon className="w-6 h-6 text-gray-400" />
+                                    )}
+                                  </div>
+                                  <div className="w-full">
+                                    <p className="font-medium text-gray-900 text-xs line-clamp-2 leading-tight">
                                       {product.title}
                                     </p>
-                                    <p className="text-xs text-gray-600">
+                                    <p className="text-xs text-gray-600 font-semibold mt-1">
                                       {product.currency} {product.price}
                                     </p>
                                   </div>
@@ -1041,7 +1070,7 @@ const ShopPage: React.FC = () => {
                             ))}
                         </div>
                       ) : (
-                        <div className="p-4 text-center text-gray-500">
+                        <div className="p-8 text-center text-gray-500">
                           No products available
                         </div>
                       )}
@@ -1114,15 +1143,102 @@ const ShopPage: React.FC = () => {
                   className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group"
                 >
                   <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
-                    {collection.image ? (
-                      <img
-                        src={collection.image}
-                        alt={collection.title}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <BoxesIcon className="w-10 h-10 text-gray-400" />
-                    )}
+                    {(() => {
+                      const compositeImage =
+                        generateCompositeCollectionImage(collection);
+
+                      if (compositeImage) {
+                        return (
+                          <img
+                            src={compositeImage}
+                            alt={collection.title}
+                            className="w-full h-full object-contain"
+                          />
+                        );
+                      }
+
+                      // Generate composite from products
+                      const compositeProducts =
+                        getCompositeProducts(collection);
+
+                      if (compositeProducts.length === 0) {
+                        return (
+                          <BoxesIcon className="w-10 h-10 text-gray-400" />
+                        );
+                      }
+
+                      if (compositeProducts.length === 1) {
+                        return (
+                          <img
+                            src={compositeProducts[0].image}
+                            alt={collection.title}
+                            className="w-full h-full object-contain"
+                          />
+                        );
+                      }
+
+                      if (compositeProducts.length === 2) {
+                        return (
+                          <div className="w-full h-full grid grid-cols-2">
+                            {compositeProducts.map((product, idx) => (
+                              <div
+                                key={idx}
+                                className="relative overflow-hidden"
+                              >
+                                <img
+                                  src={product.image}
+                                  alt={product.title}
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      if (compositeProducts.length === 3) {
+                        return (
+                          <div className="w-full h-full grid grid-cols-2 grid-rows-2">
+                            <div className="row-span-2 overflow-hidden">
+                              <img
+                                src={compositeProducts[0].image}
+                                alt={compositeProducts[0].title}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <div className="overflow-hidden">
+                              <img
+                                src={compositeProducts[1].image}
+                                alt={compositeProducts[1].title}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <div className="overflow-hidden">
+                              <img
+                                src={compositeProducts[2].image}
+                                alt={compositeProducts[2].title}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // 4+ products - 2x2 grid
+                      return (
+                        <div className="w-full h-full grid grid-cols-2 grid-rows-2">
+                          {compositeProducts.slice(0, 4).map((product, idx) => (
+                            <div key={idx} className="overflow-hidden">
+                              <img
+                                src={product.image}
+                                alt={product.title}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-2">
