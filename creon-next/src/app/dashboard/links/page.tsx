@@ -25,6 +25,7 @@ import PublicProfilePreview from "@/components/PublicProfilePreview";
 import VideoThumbnail from "@/components/VideoThumbnail";
 import { getVideoInfo } from "@/utils/videoUtils";
 import { linkService } from "@/services/link";
+import { authService } from "@/services/auth";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Link {
@@ -187,6 +188,20 @@ const LinksPageNew: React.FC = () => {
     },
   });
 
+  const updateSocialLinksMutation = useMutation({
+    mutationFn: (socialLinks: SocialLinksFormData) =>
+      authService.updateProfile({ socialLinks }),
+    onSuccess: () => {
+      toast.success("Social links saved successfully!");
+      // Optionally refetch user data if needed
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      const errorMessage =
+        error.response?.data?.message || "Failed to save social links";
+      toast.error(errorMessage);
+    },
+  });
+
   // For link form
   const {
     register,
@@ -221,6 +236,23 @@ const LinksPageNew: React.FC = () => {
   });
 
   const watchedUrl = watch("url");
+
+  const onSubmitSocialLinks = async (data: SocialLinksFormData) => {
+    try {
+      // Filter out empty strings and only send non-empty values
+      const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+        if (value && value.trim() !== "") {
+          acc[key as keyof SocialLinksFormData] = value.trim();
+        }
+        return acc;
+      }, {} as SocialLinksFormData);
+
+      await updateSocialLinksMutation.mutateAsync(cleanData);
+    } catch (error) {
+      // Error already handled by the mutation's onError callback
+      console.error("Error saving social links:", error);
+    }
+  };
 
   const links: Link[] = linksData?.data?.data?.links || [];
 
@@ -765,9 +797,7 @@ const LinksPageNew: React.FC = () => {
             </h2>
             <p className="text-gray-600 mb-4">Manage your social links</p>
             <form
-              onSubmit={handleSubmitSocial(() => {
-                toast.success("Social links saved!");
-              })}
+              onSubmit={handleSubmitSocial(onSubmitSocialLinks)}
               className="space-y-4"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -817,7 +847,9 @@ const LinksPageNew: React.FC = () => {
               </div>
               <Button
                 type="submit"
-                isLoading={isSubmittingSocial}
+                isLoading={
+                  isSubmittingSocial || updateSocialLinksMutation.isPending
+                }
                 className="w-full"
               >
                 Save Social Links
