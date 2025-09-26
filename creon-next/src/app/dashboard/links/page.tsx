@@ -653,7 +653,7 @@ const LinksPageNew: React.FC = () => {
                 >
                   {/* Inactive Overlay */}
                   {!link.isWorking && (
-                    <div className="absolute inset-0 bg-opacity-30 rounded-lg flex items-center justify-center">
+                    <div className="absolute inset-0 bg-opacity-30 rounded-lg flex items-center justify-center pointer-events-none">
                       <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                         INACTIVE
                       </span>

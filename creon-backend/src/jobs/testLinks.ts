@@ -16,7 +16,6 @@ export interface LinkTestResult {
 }
 
 export class LinkTester {
-  private static readonly TIMEOUT = 10000; // 10 seconds timeout
   private static readonly USER_AGENT = "Creon Link Checker 1.0";
 
   /**
@@ -72,7 +71,7 @@ export class LinkTester {
       logger.info(`Testing ${itemType}: ${url} (type: ${testType})`);
 
       const response = await axios.get(url, {
-        timeout: this.TIMEOUT,
+        timeout: 0,
         headers: {
           "User-Agent": this.USER_AGENT,
         },

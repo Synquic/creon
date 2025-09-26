@@ -1,34 +1,39 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001/api";
 
-console.log('🌐 API Base URL:', API_BASE_URL);
+console.log("🌐 API Base URL:", API_BASE_URL);
 
 // Create axios instance
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 0,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    console.log('🔄 Making API request:', config.method?.toUpperCase(), config.url);
-    const token = localStorage.getItem('accessToken');
-    console.log('🔑 Token exists:', !!token);
+    console.log(
+      "🔄 Making API request:",
+      config.method?.toUpperCase(),
+      config.url
+    );
+    const token = localStorage.getItem("accessToken");
+    console.log("🔑 Token exists:", !!token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 Added Authorization header');
+      console.log("🔐 Added Authorization header");
     } else {
-      console.log('❌ No token found in localStorage');
+      console.log("❌ No token found in localStorage");
     }
     return config;
   },
   (error) => {
-    console.error('❌ Request interceptor error:', error);
+    console.error("❌ Request interceptor error:", error);
     return Promise.reject(error);
   }
 );
@@ -36,12 +41,12 @@ axiosInstance.interceptors.request.use(
 // Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', response.status, response.config.url);
+    console.log("✅ API Response:", response.status, response.config.url);
     return response;
   },
   (error) => {
-    console.error('🚨 API Error:', error.response?.status, error.config?.url);
-    console.error('🚨 Error Details:', error.response?.data);
+    console.error("🚨 API Error:", error.response?.status, error.config?.url);
+    console.error("🚨 Error Details:", error.response?.data);
     return Promise.reject(error);
   }
 );
